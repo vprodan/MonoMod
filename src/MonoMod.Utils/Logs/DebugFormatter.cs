@@ -200,7 +200,7 @@ namespace MonoMod.Logs
             wrote = 0;
 
             string name;
-            if (type.HasElementType && type.GetElementType() == null) // marshalling helper types throw a NullReferenceException when accessing Namespace or FullName due to this apparent logic ontradiction
+            if (type.HasElementType && type.GetElementType() == null) // marshalling helper types throw a NullReferenceException when accessing Namespace or FullName due to this apparent logic contradiction
                 name = type.Name;
             else if (type.FullName is { } fullName)
                 name = fullName;
