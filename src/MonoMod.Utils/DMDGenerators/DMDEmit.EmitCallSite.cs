@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
+using CallSite = Mono.Cecil.CallSite;
 
 namespace MonoMod.Utils
 {
@@ -17,6 +19,10 @@ namespace MonoMod.Utils
             typeof(ILGenerator).GetMethod("emit_int", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly MethodInfo? _ILGen_ll_emit =
             typeof(ILGenerator).GetMethod("ll_emit", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo? mDynamicMethod_AddRef
+            = typeof(DynamicMethod).GetMethod("AddRef", BindingFlags.NonPublic | BindingFlags.Instance, null, [typeof(object)], null);
+        private static readonly Func<DynamicMethod, object?, int>? DynamicMethod_AddRef =
+            mDynamicMethod_AddRef?.CreateDelegate<Func<DynamicMethod, object?, int>>();
 
         // .NET 8+
         private static readonly Type? TRuntimeILGenerator = Type.GetType("System.Reflection.Emit.RuntimeILGenerator");
@@ -76,6 +82,57 @@ namespace MonoMod.Utils
             // all others don't have specific types associated
         };
 
+        private abstract class TokenCreator
+        {
+            public abstract int GetTokenForType(Type type);
+            public abstract int GetTokenForSig(byte[] sig);
+        }
+
+        private sealed class NetTokenCreator : TokenCreator
+        {
+            private readonly List<object> tokens;
+
+            public NetTokenCreator(ILGenerator il)
+            {
+                Helpers.Assert(f_DynScope_m_tokens is not null);
+                Helpers.Assert(f_DynILGen_m_scope is not null);
+
+                var list = (List<object>?)f_DynScope_m_tokens.GetValue(f_DynILGen_m_scope.GetValue(il));
+                Helpers.Assert(list is not null, "DynamicMethod object list is null!");
+                tokens = list;
+            }
+
+            public override int GetTokenForType(Type type)
+            {
+                tokens.Add(type.TypeHandle);
+                return (tokens.Count - 1) | 0x02000000; /* (int) MetadataTokenType.TypeDef */
+            }
+
+            public override int GetTokenForSig(byte[] sig)
+            {
+                tokens.Add(sig);
+                return (tokens.Count - 1) | 0x11000000; /* (int) MetadataTokenType.Signature */
+            }
+        }
+
+        private sealed class MonoTokenCreator : TokenCreator
+        {
+            private readonly DynamicMethod dm;
+            private readonly Func<DynamicMethod, object?, int> addRef;
+            public MonoTokenCreator(DynamicMethod dm)
+            {
+                Helpers.Assert(DynamicMethod_AddRef is not null);
+                addRef = DynamicMethod_AddRef;
+                this.dm = dm;
+            }
+
+            public override int GetTokenForType(Type type)
+                => addRef(dm, type);
+            public override int GetTokenForSig(byte[] sig)
+                => addRef(dm, sig); // I don't think this can actually be implemented for mono? It seems to always expect a SignatureHelper
+            // I assume, however, that we can't use SignatureHelper here because it is horribly broken on some (probably older) mono builds.
+        }
+
         internal static void _EmitCallSite(DynamicMethod dm, ILGenerator il, System.Reflection.Emit.OpCode opcode, CallSite csite)
         {
             /* The mess in this method is heavily based off of the code available at the following links:
@@ -86,39 +143,8 @@ namespace MonoMod.Utils
              * https://github.com/dotnet/coreclr/blob/0fbd855e38bc3ec269479b5f6bf561dcfd67cbb6/src/System.Private.CoreLib/src/System/Reflection/Emit/SignatureHelper.cs#L57
              */
 
-            List<object>? _tokens = null;
-            int _GetTokenForType(Type v)
-            {
-                _tokens!.Add(v.TypeHandle);
-                return _tokens.Count - 1 | 0x02000000 /* (int) MetadataTokenType.TypeDef */;
-            }
-            int _GetTokenForSig(byte[] v)
-            {
-                _tokens!.Add(v);
-                return _tokens.Count - 1 | 0x11000000 /* (int) MetadataTokenType.Signature */;
-            }
-#if !NETSTANDARD
-            DynamicILInfo? _info = null;
-            if (PlatformDetection.Runtime is RuntimeKind.Mono)
-            {
-                // GetDynamicILInfo throws "invalid signature" in .NET - let's hope for the best for mono...
-                _info = dm.GetDynamicILInfo();
-            }
-            else
-            {
-#endif
-                // For .NET, we need to access DynamicScope m_scope and its List<object> m_tokens
-                _tokens = (List<object>)f_DynScope_m_tokens!.GetValue(f_DynILGen_m_scope!.GetValue(il))!;
-#if !NETSTANDARD
-            }
-
-            int GetTokenForType(Type v) => _info != null ? _info.GetTokenFor(v.TypeHandle) : _GetTokenForType(v);
-            int GetTokenForSig(byte[] v) => _info != null ? _info.GetTokenFor(v) : _GetTokenForSig(v);
-
-#else
-            int GetTokenForType(Type v) => _GetTokenForType(v);
-            int GetTokenForSig(byte[] v) => _GetTokenForSig(v);
-#endif
+            TokenCreator tokenCreator = DynamicMethod_AddRef is not null
+                ? new MonoTokenCreator(dm) : new NetTokenCreator(il);
 
             var signature = new byte[32];
             var currSig = 0;
@@ -212,7 +238,7 @@ namespace MonoMod.Utils
                 // Mono
                 _ILGen_make_room!.Invoke(il, new object[] { 6 });
                 _ILGen_ll_emit!.Invoke(il, new object[] { opcode });
-                _ILGen_emit_int!.Invoke(il, new object[] { GetTokenForSig(signature) });
+                _ILGen_emit_int!.Invoke(il, new object[] { tokenCreator.GetTokenForSig(signature) });
             }
             else
             {
@@ -231,18 +257,18 @@ namespace MonoMod.Utils
                     _ILGen_UpdateStackSize!.Invoke(il, new object[] { opcode, -csite.Parameters.Count - 1 });
                 }
 
-                _ILGen_PutInteger4!.Invoke(il, new object[] { GetTokenForSig(signature) });
+                _ILGen_PutInteger4!.Invoke(il, new object[] { tokenCreator.GetTokenForSig(signature) });
             }
 
             void AddArgument(Type clsArgument, Type[] requiredCustomModifiers, Type[] optionalCustomModifiers)
             {
                 if (optionalCustomModifiers != null)
                     foreach (var t in optionalCustomModifiers)
-                        InternalAddTypeToken(GetTokenForType(t), 0x20 /* CorElementType.CModOpt */);
+                        InternalAddTypeToken(tokenCreator.GetTokenForType(t), 0x20 /* CorElementType.CModOpt */);
 
                 if (requiredCustomModifiers != null)
                     foreach (var t in requiredCustomModifiers)
-                        InternalAddTypeToken(GetTokenForType(t), 0x1F /* CorElementType.CModReqd */);
+                        InternalAddTypeToken(tokenCreator.GetTokenForType(t), 0x1F /* CorElementType.CModReqd */);
 
                 AddOneArgTypeHelper(clsArgument);
             }
@@ -430,11 +456,11 @@ namespace MonoMod.Utils
                     }
                     else if (clsArgument.IsValueType)
                     {
-                        InternalAddTypeToken(GetTokenForType(clsArgument), 0x11 /* CorElementType.ValueType */);
+                        InternalAddTypeToken(tokenCreator.GetTokenForType(clsArgument), 0x11 /* CorElementType.ValueType */);
                     }
                     else
                     {
-                        InternalAddTypeToken(GetTokenForType(clsArgument), 0x12 /* CorElementType.Class */);
+                        InternalAddTypeToken(tokenCreator.GetTokenForType(clsArgument), 0x12 /* CorElementType.Class */);
                     }
                 }
             }
