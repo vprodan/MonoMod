@@ -78,6 +78,7 @@
   </Target>
 
 
+  <!--
   <Choose>
     <When Condition="'$(MMIncludeTFMChecks)' == 'true'">
       <PropertyGroup>
@@ -91,6 +92,7 @@
       <None Include="$(TargetRefPath)" Pack="true" PackFolder="ref" FrameworkSpecific="true" />
     </ItemGroup>
   </Target>
+  -->
   
 </Project>
  
