@@ -141,7 +141,7 @@ jobs:
 
         exclude:
           # remove Framework and Mono where appropriate
-          - haxfx: false
+          - hasfx: false
             dotnet-version: fx
           - hasmono: false
             dotnet-version: mono
