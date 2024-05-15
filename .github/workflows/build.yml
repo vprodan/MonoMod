@@ -119,8 +119,6 @@ jobs:
             osname: Linux
           - os: windows-latest
             osname: Windows
-          - os: macos-latest
-            osname: MacOS (latest)
           - os: macos-13
             osname: MacOS 13
 
