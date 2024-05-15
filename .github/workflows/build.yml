@@ -104,20 +104,12 @@ jobs:
           # some extra OS configuration info
           - os: ubuntu-latest
             osname: Linux
-            hasfx: false
-            hasmono: true
           - os: windows-latest
             osname: Windows
-            hasfx: true
-            hasmono: false
           - os: macos-latest
             osname: MacOS (latest)
-            hasfx: false
-            hasmono: true
           - os: macos-13
             osname: MacOS 13
-            hasfx: false
-            hasmono: true
 
           # .NET version -> TFM mapping
           - dotnet-version: fx
@@ -141,9 +133,9 @@ jobs:
 
         exclude:
           # remove Framework and Mono where appropriate
-          - hasfx: false
+          - os: [ubuntu-latest, macos-latest, macos-13]
             dotnet-version: fx
-          - hasmono: false
+          - os: windows-latest
             dotnet-version: mono
 
     name: Testing ${{ matrix.dotnet-version }} on ${{ matrix.osname }}
