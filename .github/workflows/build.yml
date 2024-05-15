@@ -38,12 +38,7 @@ jobs:
           name: Windows
         - os: macos-13
           name: MacOS
-
-    outputs:
-      ubuntu-latest-cachekey: ${{ steps.cachekey.outputs.ubuntu-latest-cachekey }}
-      windows-latest-cachekey: ${{ steps.cachekey.outputs.windows-latest-cachekey }}
-      macos-13-cachekey: ${{ steps.cachekey.outputs.macos-13-cachekey }}
-  
+          
     name: 'Build #${{needs.compute-version.outputs.ver}} (${{matrix.name}})'
     runs-on: ${{ matrix.os }}
     env:
@@ -60,20 +55,13 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         global-json-file: global.json
-
-    - name: Compute cache key
-      id: cachekey
-      run: |
-        $key = "${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1";
-        echo "cachekey=$key" >> $env:GITHUB_OUTPUT
-        echo "${{ matrix.os }}-cachekey=$key" >> $env:GITHUB_OUTPUT
-
+        
     # NOTE: manual package caching
     - name: Cache restored NuGet packages
       uses: actions/cache@v4
       with:
         path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ steps.cachekey.outputs.cachekey }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1
         restore-keys: |
           ${{ runner.os }}-nuget-v1
     - name: Restore
@@ -187,12 +175,12 @@ jobs:
         name: test-assets
         
     # For some reason .NET Core 2.1 (and only it!) needs a package restore; it looks there for the testhost for some reason
-    - name: Load cached NuGet packages
-      uses: actions/cache@v4
-      if: ${{ matrix.tfm == 'netcoreapp2.1' }}
-      with:
-        path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ needs.build.outputs.${{matrix.os}}-cachekey }}
+    #- name: Load cached NuGet packages
+    #  uses: actions/cache@v4
+    #  if: ${{ matrix.tfm == 'netcoreapp2.1' }}
+    #  with:
+    #    path: ${{ env.NUGET_PACKAGES }}
+    #    key: ${{ needs.build.outputs.${{matrix.os}}-cachekey }}
 
     - name: Install test target runtime SDK
       uses: actions/setup-dotnet@v4
