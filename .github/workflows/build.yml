@@ -177,6 +177,7 @@ jobs:
       if: ${{ matrix.tfm == 'netcoreapp2.1' }}
       with:
         path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-
         restore-keys: ${{ runner.os }}-nuget-v1-
         fail-on-cache-miss: true
 
