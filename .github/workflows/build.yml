@@ -72,8 +72,9 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: binlogs-${{ matrix.osname }}
+        name: binlogs-${{ matrix.name }}
         path: '*.binlog'
+        retention-days: 7
 
     - name: Archive packages
       uses: actions/upload-artifact@v4
