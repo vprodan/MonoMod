@@ -146,7 +146,7 @@ steps:
   displayName: 'Artifacts: Publish: nupkgs'
   continueOnError: true
   inputs:
-    pathtoPublish: 'artifacts/package/${{lower(buildConfiguration)}}'
+    pathtoPublish: 'artifacts/package/${{lower(variables.buildConfiguration)}}'
     artifactName: '$(artifactPrefix)nupkgs$(artifactSuffix)'
     publishLocation: 'Container'
 - task: NuGetCommand@2
