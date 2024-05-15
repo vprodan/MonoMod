@@ -119,26 +119,35 @@ jobs:
 
     name: Test ${{ matrix.title }}
     runs-on: ${{ matrix.os.runner }}
-    steps:
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v4
+      if: ${{ matrix.dotnet.needsRestore }}
+      with:
+        lfs: true
+        submodules: recursive
+        
     - name: Install global SDK
+      if: ${{ ! matrix.dotnet.needsRestore }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
+    - name: Install restore SDK
+      if: ${{ matrix.dotnet.needsRestore }}
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Restore packages
+      if: ${{ matrix.dotnet.needsRestore }}
+      run: dotnet restore -noAutoRsp
+
     - name: Download test assets
       uses: actions/download-artifact@v4
       with:
         name: test-assets
         
-    # For some reason .NET Core 2.1 (and only it!) needs a package restore; it looks there for the testhost for some reason
-    #- name: Load cached NuGet packages
-    #  uses: actions/cache@v4
-    #  if: ${{ matrix.tfm == 'netcoreapp2.1' }}
-    #  with:
-    #    path: ${{ env.NUGET_PACKAGES }}
-    #    key: ${{ runner.os }}-nuget-v1-
-    #    restore-keys: ${{ runner.os }}-nuget-v1-
-    #    fail-on-cache-miss: true
-
     - name: Install test target runtime SDK
       uses: actions/setup-dotnet@v4
       if: ${{ matrix.dotnet.sdk != '' }}

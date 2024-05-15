@@ -11,18 +11,21 @@ $operatingSystems = @(
         runner = "windows-latest";
         ridname = "win";
         arch = @("x86","x64"); # while .NET Framework supports Arm64, GitHub doesn't provide Arm windows runners
+        hasFramework = $true;
     },
     [pscustomobject]@{
         name = "Linux";
         runner = "ubuntu-latest";
         ridname = "linux";
         arch = @("x64");
+        hasMono = $true;
     },
     [pscustomobject]@{
         name = "MacOS 13";
         runner = "macos-13";
         ridname = "osx";
         arch = @("x64");
+        hasMono = $true;
     },
     [pscustomobject]@{
         enable = $false;
@@ -30,6 +33,7 @@ $operatingSystems = @(
         runner = "macos-14";
         ridname = "osx";
         arch = @("x64", "arm64"); # x64 comes from Rosetta
+        hasMono = $true;
     }
 );
 
@@ -39,6 +43,7 @@ $dotnetVersions = @(
         id = 'fx';
         tfm = "net46";
         rids = @("win-x86","win-x64","win-arm64");
+        isFramework = $true;
     },
     [pscustomobject]@{
         name = ".NET Core 2.1";
@@ -93,7 +98,7 @@ $jobs = @();
 foreach ($os in $operatingSystems)
 {
     if ($os.enable -eq $false) { continue; }
-    $outos = $os | Select-Object -ExcludeProperty arch | Select-Object -ExcludeProperty ridname
+    $outos = $os | Select-Object -ExcludeProperty arch,ridname,hasFramework,hasMono
 
     foreach ($arch in $os.arch)
     {
@@ -102,6 +107,12 @@ foreach ($os in $operatingSystems)
         foreach ($dotnet in $dotnetVersions)
         {
             if ($dotnet.enable -eq $false) { continue; }
+
+            if ($dotnet.isFramework -and -not $os.hasFramework)
+            {
+                # we're looking at .NET Framework, but this OS doesn't support it
+                continue;
+            }
 
             if (-not $dotnet.rids -contains $rid)
             {
