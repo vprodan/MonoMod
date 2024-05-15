@@ -10,7 +10,7 @@ steps:
     sourceFolder: '$(Agent.BuildDirectory)'
     # the leading **/ shouldn't be necessary, but it seems to be
     contents: |
-        **/artifacts/bin/**/${{parameters.buildConfiguration}}/${{parameters.targetFramework}}/**/*
+        **/artifacts/bin/**/${{lower(parameters.buildConfiguration)}}_${{parameters.targetFramework}}/**/*
         !**/MonoMod.FrameworkTests/**/*
         !**/Monomod.Backports.Filter/**/*
         !**/Monomod.ILHelpers.Patcher/**/*
