@@ -119,6 +119,8 @@ jobs:
 
     name: Test ${{ matrix.title }}
     runs-on: ${{ matrix.os.runner }}
+    env:
+      LOG_FILE_NAME: testresults.${{ matrix.os.runner }}.${{ matrix.dotnet.id != '' && matrix.dotnet.id || matrix.dotnet.sdk }}.${{ matrix.arch }}.trx
     steps:    
     - name: Checkout
       uses: actions/checkout@v4
@@ -163,14 +165,11 @@ jobs:
 
     - name: Run tests
       if: ${{ ! matrix.dotnet.isMono && ! matrix.dotnet.pgo }}
-      env:
-        LOG_FILE_NAME: testresults.${{ matrix.os.runner }}.${{ matrix.dotnet.id != '' && matrix.dotnet.id || matrix.dotnet.sdk }}.trx
       run: dotnet test -f ${{ matrix.dotnet.tfm }} -a ${{ matrix.arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ matrix.dotnet.tfm }}/MonoMod.UnitTest.dll
 
     - name: Run tests (PGO)
       if: ${{ matrix.dotnet.pgo }}
       env:
-        LOG_FILE_NAME: testresults.${{ matrix.os.runner }}.${{ matrix.dotnet.id != '' && matrix.dotnet.id || matrix.dotnet.sdk }}.trx
         DOTNET_ReadyToRun: ${{ matrix.usePgo && 0 || 1 }}
         DOTNET_TC_QuicJitForLoops: ${{ matrix.usePgo && 1 || 0 }}
         DOTNET_TieredPGO: ${{ matrix.usePgo && 1 || 0 }}
@@ -199,11 +198,11 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         pattern: test-results *
-        merge-multiple: true
+        merge-multiple: false
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: '*.trx'
+        files: '**/*.trx'
         comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
         report_individual_runs: true
