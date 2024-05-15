@@ -38,6 +38,9 @@ jobs:
           name: Windows
         - os: macos-13
           name: MacOS
+
+    outputs:
+      ${{ matrix.os }}-cachekey: ${{ steps.cachekey.outputs.${{runner.os}}-cachekey }}
   
     name: 'Build #${{needs.compute-version.outputs.ver}} (${{matrix.name}})'
     runs-on: ${{ matrix.os }}
@@ -56,12 +59,16 @@ jobs:
       with:
         global-json-file: global.json
 
-    # NOTE: manual package caching 
+    - name: Compute cache key
+      id: cachekey
+      run: echo "${{ runner.os }}-cachekey=${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1" >> $env:GITHUB_OUTPUT
+
+    # NOTE: manual package caching
     - name: Cache restored NuGet packages
       uses: actions/cache@v4
       with:
         path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1
+        key: ${{ steps.cachekey.outputs.${{runner.os}}-cachekey }}
         restore-keys: |
           ${{ runner.os }}-nuget-v1
     - name: Restore
@@ -173,6 +180,14 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: test-assets
+        
+    # For some reason .NET Core 2.1 (and only it!) needs a package restore; it looks there for the testhost for some reason
+    - name: Load cached NuGet packages
+      uses: actions/cache@v4
+      if: ${{ matrix.tfm == 'netcoreapp2.1' }}
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ needs.build.outputs.${{matrix.os}}-cachekey }}
 
     - name: Install test target runtime SDK
       uses: actions/setup-dotnet@v4
