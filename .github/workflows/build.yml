@@ -17,7 +17,7 @@ jobs:
       ver: ${{ steps.computever.outputs.ver }}
     steps:
     - id: computever
-      run: echo "ver=$(Get-Date -Format yy.MM.dd).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
+      run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
   
   build:
     needs: compute-version
