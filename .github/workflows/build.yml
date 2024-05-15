@@ -7,6 +7,11 @@ defaults:
   run:
     shell: pwsh
 
+env:
+  DOTNET_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
 # We'll have a job for building (that runs on x64 machines only, one for each OS to make sure it actually builds)
 # Then, we'll take the result from one of those (probaly Linux) and distribute build artifacts to testers to run
 # a load of tests. This will (eventually) include ARM runners, where possible.
@@ -37,27 +42,27 @@ jobs:
     name: 'Build #${{needs.compute-version.outputs.ver}} (${{matrix.name}})'
     runs-on: ${{ matrix.os }}
     env:
-      DOTNET_TELEMETRY_OPTOUT: true
-      DOTNET_NOLOGO: true
-      NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
       VersionSuffix: daily.${{needs.compute-version.outputs.ver}}
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
       with:
         lfs: true
         submodules: recursive
 
     # TODO: maybe we can eventually use package locks for package caching?
-    - uses: actions/setup-dotnet@v4
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v4
       with:
         global-json-file: global.json
 
     # NOTE: manual package caching 
-    - uses: actions/cache@v4
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
       with:
         path: ${{ env.NUGET_PACKAGES }}
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1
-        restore-keys:
+        restore-keys: |
           ${{ runner.os }}-nuget-v1
     - name: Restore
       run: dotnet restore -bl:restore.binlog -noAutoRsp
@@ -159,9 +164,6 @@ jobs:
 
     name: Test ${{ matrix.fxname }} on ${{ matrix.osname }}
     runs-on: ${{ matrix.os }}
-    env:
-      DOTNET_TELEMETRY_OPTOUT: true
-      DOTNET_NOLOGO: true
     steps:
     - name: Install global SDK
       uses: actions/setup-dotnet@v4
@@ -192,8 +194,8 @@ jobs:
         path: 'TestResults/*.trx'
 
   publish-test-results:
-    if: ${{ always() }}
-    needs: test
+    needs: [build, test]
+    if: ${{ always() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     name: Publish test results
     permissions:
