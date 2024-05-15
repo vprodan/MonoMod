@@ -1,0 +1,202 @@
+name: Build + Test
+on:
+  push:
+  pull_request:
+  
+defaults:
+  run:
+    shell: pwsh
+
+# We'll have a job for building (that runs on x64 machines only, one for each OS to make sure it actually builds)
+# Then, we'll take the result from one of those (probaly Linux) and distribute build artifacts to testers to run
+# a load of tests. This will (eventually) include ARM runners, where possible.
+jobs:
+  compute-version:
+    runs-on: ubuntu-latest
+    outputs:
+      ver: ${{ steps.computever.outputs.ver }}
+    steps:
+    - id: computever
+      run: echo "ver=$(Get-Date -Format yy.MM.dd).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
+  
+  build:
+    needs: compute-version
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13]
+        include:
+        - os: ubuntu-latest
+          name: Linux
+          upload-packages: true
+          upload-tests: true
+        - os: windows-latest
+          name: Windows
+        - os: macos-13
+          name: MacOS
+  
+    name: 'Build #${{needs.compute-version.outputs.ver}} (${{matrix.name}})'
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+      NUGET_PACKAGES: artifacts/pkg
+      VersionSuffix: daily.${{needs.compute-version.outputs.ver}}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
+        submodules: recursive
+
+    # TODO: maybe we can eventually use package locks for package caching?
+    - uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    # NOTE: manual package caching 
+    - uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1
+        restore-keys:
+          ${{ runner.os }}-nuget-v1
+    - name: Restore
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore -c Release -p:ContinuousIntegrationBuild=true
+
+    - name: Pack
+      run: dotnet pack --no-restore --no-build -c Release -p:ContinuousIntegrationBuild=true
+
+    - name: Archive packages
+      uses: actions/upload-artifact@v4
+      if: ${{ matrix.upload-packages }}
+      with:
+        name: packages
+        path: artifacts/package/release/*.nupkg
+
+    - name: Upload test assets
+      uses: actions/upload-artifact@v4
+      if: ${{ matrix.upload-tests }}
+      with:
+        name: test-assets
+        retention-days: 1
+        path: |
+          artifacts/bin/MonoMod.UnitTests/*/**/*
+
+  test:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+        dotnet-version:
+          - fx
+          - mono
+          - 2.1.x
+          - 3.0.x
+          - 3.1.x
+          - 5.0.x
+          - 6.0.x
+          - 7.0.x
+          - 8.0.x
+        include:
+          # some extra OS configuration info
+          - os: ubuntu-latest
+            osname: Linux
+            hasfx: false
+            hasmono: true
+          - os: windows-latest
+            osname: Windows
+            hasfx: true
+            hasmono: false
+          - os: macos-latest
+            osname: MacOS (latest)
+            hasfx: false
+            hasmono: true
+          - os: macos-13
+            osname: MacOS 13
+            hasfx: false
+            hasmono: true
+
+          # .NET version -> TFM mapping
+          - dotnet-version: fx
+            tfm: net46
+          - dotnet-version: mono
+            tfm: net46
+          - dotnet-version: 2.1.x
+            tfm: netcoreapp2.1
+          - dotnet-version: 3.0.x
+            tfm: netcoreapp3.0
+          - dotnet-version: 3.1.x
+            tfm: netcoreapp3.1
+          - dotnet-version: 5.0.x
+            tfm: net5.0
+          - dotnet-version: 6.0.x
+            tfm: net6.0
+          - dotnet-version: 7.0.x
+            tfm: net7.0
+          - dotnet-version: 8.0.x
+            tfm: net8.0
+
+        exclude:
+          # remove Framework and Mono where appropriate
+          - haxfx: false
+            dotnet-version: fx
+          - hasmono: false
+            dotnet-version: mono
+
+    name: Testing ${{ matrix.dotnet-version }} on ${{ matrix.osname }}
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+    steps:
+    - name: Install global SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Install test target runtime SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Download test assets
+      uses: actions/download-artifact@v4
+      with:
+        name: test-assets
+
+    - name: Run tests
+      if: ${{ matrix.dotnet-version != 'mono' }}
+      run: dotnet test -f ${{ matrix.tfm }} -l:"trx;LogFileName=testresults.${{matrix.os}}.${{matrix.dotnet-version}}.trx" release_${{ matrix.tfm }}/MonoMod.UnitTest.dll
+
+    # TODO: Mono?
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: test-results-${{ matrix.osname }}-${{ matrix.dotnet-version }}
+        retention-days: 1
+        path: '*.trx'
+
+  publish-test-results:
+    if: ${{ always() }}
+    needs: test
+    runs-on: ubuntu-latest
+    name: Publish test results
+    permissions:
+      checks: write
+      pull-requests: write
+    steps:
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: test-results-*
+        merge-multiple: true
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: '*.trx'
+        comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
+        report_individual_runs: true
