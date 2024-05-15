@@ -96,71 +96,29 @@ jobs:
         path: |
           artifacts/bin/MonoMod.UnitTest/*/**/*
 
+  compute-test-matrix:
+    name: Compute Test Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.compute-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: false
+        submodules: false
+    - name: Compute test matrix
+      id: compute-matrix
+      run: ./.github/gen-test-matrix.ps1 -MatrixOutName matrix -GithubOutput $env:GITHUB_OUTPUT
+      
   test:
-    needs: build
+    needs: [compute-test-matrix, build]
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
-        dotnet-version:
-          - fx
-          - mono
-          - 2.1.x
-          - 3.0.x
-          - 3.1.x
-          - 5.0.x
-          - 6.0.x
-          - 7.0.x
-          - 8.0.x
-        include:
-          # some extra OS configuration info
-          - os: ubuntu-latest
-            osname: Linux
-          - os: windows-latest
-            osname: Windows
-          - os: macos-13
-            osname: MacOS 13
+      matrix: ${{ fromJSON(needs.compute-test-matrix.outputs.matrix) }}
 
-          # .NET version -> TFM mapping
-          - dotnet-version: fx
-            tfm: net46
-            fxname: .NET Framework 4.x
-          - dotnet-version: mono
-            tfm: net46
-            fxname: Mono
-          - dotnet-version: 2.1.x
-            tfm: netcoreapp2.1
-            fxname: .NET Core 2.1
-          - dotnet-version: 3.0.x
-            tfm: netcoreapp3.0
-            fxname: .NET Core 3.0
-          - dotnet-version: 3.1.x
-            tfm: netcoreapp3.1
-            fxname: .NET Core 3.1
-          - dotnet-version: 5.0.x
-            tfm: net5.0
-            fxname: .NET 5.0
-          - dotnet-version: 6.0.x
-            tfm: net6.0
-            fxname: .NET 6.0
-          - dotnet-version: 7.0.x
-            tfm: net7.0
-            fxname: .NET 7.0
-          - dotnet-version: 8.0.x
-            tfm: net8.0
-            fxname: .NET 8.0
-
-        exclude:
-          # remove Framework and Mono where appropriate
-          - os: ubuntu-latest
-            dotnet-version: fx
-          - os: macos-13
-            dotnet-version: fx
-          - os: windows-latest
-            dotnet-version: mono
-
-    name: Test ${{ matrix.fxname }} on ${{ matrix.osname }}
-    runs-on: ${{ matrix.os }}
+    name: Test ${{ matrix.title }}
+    runs-on: ${{ matrix.os.runner }}
     steps:
     - name: Install global SDK
       uses: actions/setup-dotnet@v4
@@ -183,12 +141,24 @@ jobs:
 
     - name: Install test target runtime SDK
       uses: actions/setup-dotnet@v4
-      if: ${{ matrix.dotnet-version != 'mono' && matrix.dotnet-version != 'fx' }}
+      if: ${{ matrix.dotnet.sdk != '' }}
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: ${{ matrix.dotnet.sdk }}
+
     - name: Run tests
-      if: ${{ matrix.dotnet-version != 'mono' }}
-      run: dotnet test -f ${{ matrix.tfm }} -l:"trx;LogFileName=testresults.${{matrix.os}}.${{matrix.dotnet-version}}.trx" release_${{ matrix.tfm }}/MonoMod.UnitTest.dll
+      if: ${{ ! matrix.dotnet.isMono && ! matrix.dotnet.pgo }}
+      env:
+        LOG_FILE_NAME: testresults.${{ matrix.os.runner }}.${{ matrix.dotnet.id != '' && matrix.dotnet.id || matrix.dotnet.sdk }}.trx
+      run: dotnet test -f ${{ matrix.dotnet.tfm }} -a ${{ matrix.arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ matrix.dotnet.tfm }}/MonoMod.UnitTest.dll
+
+    - name: Run tests (PGO)
+      if: ${{ matrix.dotnet.pgo }}
+      env:
+        LOG_FILE_NAME: testresults.${{ matrix.os.runner }}.${{ matrix.dotnet.id != '' && matrix.dotnet.id || matrix.dotnet.sdk }}.trx
+        DOTNET_ReadyToRun: ${{ matrix.usePgo && 0 || 1 }}
+        DOTNET_TC_QuicJitForLoops: ${{ matrix.usePgo && 1 || 0 }}
+        DOTNET_TieredPGO: ${{ matrix.usePgo && 1 || 0 }}
+      run: dotnet test -f ${{ matrix.dotnet.tfm }} -a ${{ matrix.arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ matrix.dotnet.tfm }}/MonoMod.UnitTest.dll
 
     # TODO: Mono?
 
@@ -196,7 +166,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: test-results-${{ matrix.osname }}-${{ matrix.dotnet-version }}
+        name: test-results ${{ matrix.title }}
         retention-days: 1
         path: 'TestResults/*.trx'
 
@@ -212,7 +182,7 @@ jobs:
     - name: Download test results
       uses: actions/download-artifact@v4
       with:
-        pattern: test-results-*
+        pattern: test-results *
         merge-multiple: true
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
