@@ -63,14 +63,17 @@ jobs:
 
     - name: Compute cache key
       id: cachekey
-      run: echo "${{ matrix.os }}-cachekey=${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1" >> $env:GITHUB_OUTPUT
+      run: |
+        $key = "${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}-v1";
+        echo "cachekey=$key" >> $env:GITHUB_OUTPUT
+        echo "${{ matrix.os }}-cachekey=$key" >> $env:GITHUB_OUTPUT
 
     # NOTE: manual package caching
     - name: Cache restored NuGet packages
       uses: actions/cache@v4
       with:
         path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ steps.cachekey.outputs.${{ matrix.os }}-cachekey }}
+        key: ${{ steps.cachekey.outputs.cachekey }}
         restore-keys: |
           ${{ runner.os }}-nuget-v1
     - name: Restore
