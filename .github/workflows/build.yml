@@ -89,7 +89,7 @@ jobs:
         name: test-assets
         retention-days: 1
         path: |
-          artifacts/bin/MonoMod.UnitTests/*/**/*
+          artifacts/bin/MonoMod.UnitTest/*/**/*
 
   test:
     needs: build
