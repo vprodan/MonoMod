@@ -43,6 +43,10 @@
     <SignAssembly Condition="'$(SignAssembly)' == 'force'">true</SignAssembly>
     <SignAssembly Condition="'$(SignAssembly)' != 'skip'">false</SignAssembly> <!-- default -->
     <DelaySign>false</DelaySign>
+    
+    <!-- Package locking -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreLockedMode>
   </PropertyGroup>
 
   <!-- Debug -->

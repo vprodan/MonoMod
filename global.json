@@ -3,5 +3,9 @@
     "allowPrerelease": true,
     "rollForward": "latestMinor",
     "version": "8.0.100"
+  },
+  "msbuild-sdks": {
+    "Microsoft.Build.NoTargets": "3.7.56",
+    "Microsoft.NET.Sdk.IL": "8.0.0"
   }
 }
