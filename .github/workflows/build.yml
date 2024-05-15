@@ -39,7 +39,7 @@ jobs:
     env:
       DOTNET_TELEMETRY_OPTOUT: true
       DOTNET_NOLOGO: true
-      NUGET_PACKAGES: artifacts/pkg
+      NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
       VersionSuffix: daily.${{needs.compute-version.outputs.ver}}
     steps:
     - uses: actions/checkout@v4
