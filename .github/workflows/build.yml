@@ -132,7 +132,14 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-
+        
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
+      if: ${{ matrix.dotnet.needsRestore }}
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
     - name: Install restore SDK
       if: ${{ matrix.dotnet.needsRestore }}
       uses: actions/setup-dotnet@v4
