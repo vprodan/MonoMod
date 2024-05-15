@@ -172,14 +172,14 @@ jobs:
         name: test-assets
         
     # For some reason .NET Core 2.1 (and only it!) needs a package restore; it looks there for the testhost for some reason
-    - name: Load cached NuGet packages
-      uses: actions/cache@v4
-      if: ${{ matrix.tfm == 'netcoreapp2.1' }}
-      with:
-        path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ runner.os }}-nuget-v1-
-        restore-keys: ${{ runner.os }}-nuget-v1-
-        fail-on-cache-miss: true
+    #- name: Load cached NuGet packages
+    #  uses: actions/cache@v4
+    #  if: ${{ matrix.tfm == 'netcoreapp2.1' }}
+    #  with:
+    #    path: ${{ env.NUGET_PACKAGES }}
+    #    key: ${{ runner.os }}-nuget-v1-
+    #    restore-keys: ${{ runner.os }}-nuget-v1-
+    #    fail-on-cache-miss: true
 
     - name: Install test target runtime SDK
       uses: actions/setup-dotnet@v4
