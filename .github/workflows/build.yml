@@ -58,7 +58,7 @@ jobs:
     #    global-json-file: global.json
 
     - name: Install .NET SDK
-      uses: nike4613/install-dotnet@c7ceea0fdf7fe99613198bf03903beb113cd015a
+      uses: nike4613/install-dotnet@9179880a320456c7fefcc297d4974e67ba7e36de
       with:
         global-json: global.json
         
@@ -140,7 +140,7 @@ jobs:
         
     - name: Install global SDK
       if: ${{ ! matrix.dotnet.needsRestore }}
-      uses: nike4613/install-dotnet@c7ceea0fdf7fe99613198bf03903beb113cd015a
+      uses: nike4613/install-dotnet@9179880a320456c7fefcc297d4974e67ba7e36de
       with:
         version: 8.0.x
         
@@ -153,7 +153,7 @@ jobs:
         restore-keys: ${{ runner.os }}-nuget-v1-
     - name: Install restore SDK
       if: ${{ matrix.dotnet.needsRestore }}
-      uses: nike4613/install-dotnet@c7ceea0fdf7fe99613198bf03903beb113cd015a
+      uses: nike4613/install-dotnet@9179880a320456c7fefcc297d4974e67ba7e36de
       with:
         global-json: global.json
 
@@ -168,7 +168,7 @@ jobs:
         
     - name: Install test target runtime
       if: ${{ matrix.dotnet.sdk != '' }}
-      uses: nike4613/install-dotnet@c7ceea0fdf7fe99613198bf03903beb113cd015a
+      uses: nike4613/install-dotnet@9179880a320456c7fefcc297d4974e67ba7e36de
       with:
         version: ${{ matrix.dotnet.sdk }}
         architecture: ${{ matrix.arch }}
