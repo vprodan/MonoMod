@@ -47,46 +47,46 @@ $dotnetVersions = @(
     },
     [pscustomobject]@{
         name = ".NET Core 2.1";
-        sdk = "2.1.x";
+        sdk = "2.1";
         tfm = "netcoreapp2.1";
         rids = @("win-x86","win-x64","linux-x64","osx-x64");
         needsRestore = $true;
     },
     [pscustomobject]@{
         name = ".NET Core 3.0";
-        sdk = "3.0.x";
+        sdk = "3.0";
         tfm = "netcoreapp3.0";
         rids = @("win-x86","win-x64","linux-x64","osx-x64");
     },
     [pscustomobject]@{
         name = ".NET Core 3.1";
-        sdk = "3.1.x";
+        sdk = "3.1";
         tfm = "netcoreapp3.1";
         rids = @("win-x86","win-x64","linux-x64","osx-x64");
     },
     [pscustomobject]@{
         name = ".NET 5.0";
-        sdk = "5.0.x";
+        sdk = "5.0";
         tfm = "net5.0";
         rids = @("win-x86","win-x64","linux-x64","osx-x64");
     },
     [pscustomobject]@{
         name = ".NET 6.0";
-        sdk = "6.0.x";
+        sdk = "6.0";
         tfm = "net6.0";
         rids = @("win-x86","win-x64","win-arm64","linux-x64","linux-arm","linux-arm64","osx-x64","osx-arm64");
         pgo = $true;
     },
     [pscustomobject]@{
         name = ".NET 7.0";
-        sdk = "7.0.x";
+        sdk = "7.0";
         tfm = "net7.0";
         rids = @("win-x86","win-x64","win-arm64","linux-x64","linux-arm","linux-arm64","osx-x64","osx-arm64");
         pgo = $true;
     },
     [pscustomobject]@{
         name = ".NET 8.0";
-        sdk = "8.0.x";
+        sdk = "8.0";
         tfm = "net8.0";
         rids = @("win-x86","win-x64","win-arm64","linux-x64","linux-arm","linux-arm64","osx-x64","osx-arm64");
         pgo = $true;
