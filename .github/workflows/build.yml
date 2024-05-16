@@ -51,10 +51,15 @@ jobs:
         submodules: recursive
 
     # TODO: maybe we can eventually use package locks for package caching?
+    #- name: Install .NET SDK
+    #  uses: actions/setup-dotnet@v4
+    #  with:
+    #    global-json-file: global.json
+
     - name: Install .NET SDK
-      uses: actions/setup-dotnet@v4
+      uses: nike4613/install-dotnet@aaa4ec805e8ea5ef03f98e3d398613ebcb2dd7c2
       with:
-        global-json-file: global.json
+        global-json: global.json
         
     # NOTE: manual package caching
     - name: Cache restored NuGet packages
@@ -71,6 +76,9 @@ jobs:
 
     - name: Pack
       run: dotnet pack --no-restore -c Release -p:ContinuousIntegrationBuild=true -bl:pack.binlog -clp:NoSummary -noAutoRsp
+
+      # TODO: it might be worth trying to do a "smoketest" test run with the installed tfm to broadly make sure that all builds
+      #       work. We may also want to do a hash check on the packages, though I have no idea how reliable that would be.
 
     - name: Upload binlogs
       uses: actions/upload-artifact@v4
@@ -131,9 +139,9 @@ jobs:
         
     - name: Install global SDK
       if: ${{ ! matrix.dotnet.needsRestore }}
-      uses: actions/setup-dotnet@v4
+      uses: nike4613/install-dotnet@aaa4ec805e8ea5ef03f98e3d398613ebcb2dd7c2
       with:
-        dotnet-version: 8.0.x
+        version: 8.0.x
         
     - name: Cache restored NuGet packages
       uses: actions/cache@v4
@@ -144,9 +152,9 @@ jobs:
         restore-keys: ${{ runner.os }}-nuget-v1-
     - name: Install restore SDK
       if: ${{ matrix.dotnet.needsRestore }}
-      uses: actions/setup-dotnet@v4
+      uses: nike4613/install-dotnet@aaa4ec805e8ea5ef03f98e3d398613ebcb2dd7c2
       with:
-        global-json-file: global.json
+        global-json: global.json
 
     - name: Restore packages
       if: ${{ matrix.dotnet.needsRestore }}
@@ -157,11 +165,13 @@ jobs:
       with:
         name: test-assets
         
-    - name: Install test target runtime SDK
-      uses: actions/setup-dotnet@v4
+    - name: Install test target runtime
       if: ${{ matrix.dotnet.sdk != '' }}
+      uses: nike4613/install-dotnet@aaa4ec805e8ea5ef03f98e3d398613ebcb2dd7c2
       with:
-        dotnet-version: ${{ matrix.dotnet.sdk }}
+        version: ${{ matrix.dotnet.sdk }}
+        architecture: ${{ matrix.arch }}
+        runtime: dotnet
 
     - name: Run tests
       if: ${{ ! matrix.dotnet.isMono && ! matrix.dotnet.pgo }}
