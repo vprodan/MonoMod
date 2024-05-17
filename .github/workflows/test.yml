@@ -1,0 +1,96 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+  
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
+jobs:
+  test:  
+    name: Test ${{ fromJSON(matrix).title }}
+    runs-on: ${{ fromJSON(matrix).os.runner }}
+    env:
+      LOG_FILE_NAME: testresults.${{ fromJSON(matrix).os.runner }}.${{ fromJSON(matrix).dotnet.id != '' && fromJSON(matrix).dotnet.id || fromJSON(matrix).dotnet.sdk }}.${{ fromJSON(matrix).arch }}.trx
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v4
+      if: ${{ fromJSON(matrix).dotnet.needsRestore }}
+      with:
+        lfs: true
+        submodules: recursive
+        
+    # Note: All of the SDKs we install have to be for the target architecture. Otherwise, we get issues when the default != the target.
+    - name: Install global SDK
+      if: ${{ ! fromJSON(matrix).dotnet.needsRestore }}
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        architecture: ${{ fromJSON(matrix).arch }}
+        version: "8.0"
+        
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
+      if: ${{ fromJSON(matrix).dotnet.needsRestore }}
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
+
+    - name: Install restore SDK
+      if: ${{ fromJSON(matrix).dotnet.needsRestore }}
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        architecture: ${{ fromJSON(matrix).arch }}
+        global-json: global.json
+
+    - name: Restore packages
+      if: ${{ fromJSON(matrix).dotnet.needsRestore }}
+      run: dotnet restore -noAutoRsp
+
+    - name: Download test assets
+      uses: actions/download-artifact@v4
+      with:
+        name: test-assets
+        
+    - name: Install test target runtime
+      if: ${{ fromJSON(matrix).dotnet.sdk != '' }}
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        version: ${{ fromJSON(matrix).dotnet.sdk }}
+        architecture: ${{ fromJSON(matrix).arch }}
+        runtime: dotnet
+
+    - name: Print SDK info
+      run: dotnet --info
+
+    - name: Run tests
+      if: ${{ ! fromJSON(matrix).dotnet.isMono && ! fromJSON(matrix).dotnet.pgo }}
+      run: dotnet test -f ${{ fromJSON(matrix).dotnet.tfm }} -a ${{ fromJSON(matrix).arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
+
+    - name: Run tests (PGO)
+      if: ${{ fromJSON(matrix).dotnet.pgo }}
+      env:
+        DOTNET_ReadyToRun: ${{ fromJSON(matrix).usePgo && 0 || 1 }}
+        DOTNET_TC_QuicJitForLoops: ${{ fromJSON(matrix).usePgo && 1 || 0 }}
+        DOTNET_TieredPGO: ${{ fromJSON(matrix).usePgo && 1 || 0 }}
+      run: dotnet test -f ${{ fromJSON(matrix).dotnet.tfm }} -a ${{ fromJSON(matrix).arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
+
+    # TODO: Mono?
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: test-results ${{ fromJSON(matrix).title }}
+        retention-days: 1
+        path: 'TestResults/*.trx'
