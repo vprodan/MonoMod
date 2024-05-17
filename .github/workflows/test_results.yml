@@ -17,25 +17,19 @@ jobs:
       pull-requests: write
       actions: read
     steps:
-
-    - name: Download event file
-      uses: actions/download-artifact@v4
-      with:
-        run-id: ${{ github.event.workflow_run.id }}
-        name: test-event-file
-
+    
     - name: Download test results
       uses: actions/download-artifact@v4
       with:
         run-id: ${{ github.event.workflow_run.id }}
-        pattern: test-results *
+        pattern: test-*
         merge-multiple: false
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
-        event_file: event.json
+        event_file: test-event-file/event.json
         event_name: ${{ github.event.workflow_run.event }}
 
         files: '**/*.trx'
