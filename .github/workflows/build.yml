@@ -83,7 +83,7 @@ jobs:
       #       work. We may also want to do a hash check on the packages, though I have no idea how reliable that would be.
       
     - name: Run auxiliary tests
-      run: dotnet test -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" --no-build -f "FullyQualifiedName!~MonoMod.UnitTest"
+      run: dotnet test --no-build  -c Release -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" -f "FullyQualifiedName!~MonoMod.UnitTest"
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
