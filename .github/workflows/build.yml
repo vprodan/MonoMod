@@ -92,6 +92,7 @@ jobs:
         name: test-results aux ${{ runner.os }}
         retention-days: 1
         path: 'TestResults/*.trx'
+        if-no-files-found: ignore
 
     - name: Upload binlogs
       uses: actions/upload-artifact@v4
