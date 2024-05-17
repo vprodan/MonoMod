@@ -26,6 +26,7 @@ jobs:
       with:
         name: test-event-file
         path: ${{ github.event_path }}
+        retention-days: 1
   
   compute-version:
     name: Compute Version
