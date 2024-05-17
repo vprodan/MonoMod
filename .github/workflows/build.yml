@@ -138,10 +138,12 @@ jobs:
         lfs: true
         submodules: recursive
         
+    # Note: All of the SDKs we install have to be for the target architecture. Otherwise, we get issues when the default != the target.
     - name: Install global SDK
       if: ${{ ! matrix.dotnet.needsRestore }}
       uses: nike4613/install-dotnet@6e785e8b036f6f294c297beab2b875d4cc28a1a0
       with:
+        architecture: ${{ matrix.arch }}
         version: "8.0"
         
     - name: Cache restored NuGet packages
@@ -155,6 +157,7 @@ jobs:
       if: ${{ matrix.dotnet.needsRestore }}
       uses: nike4613/install-dotnet@6e785e8b036f6f294c297beab2b875d4cc28a1a0
       with:
+        architecture: ${{ matrix.arch }}
         global-json: global.json
 
     - name: Restore packages
