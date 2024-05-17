@@ -16,6 +16,17 @@ env:
 # Then, we'll take the result from one of those (probaly Linux) and distribute build artifacts to testers to run
 # a load of tests. This will (eventually) include ARM runners, where possible.
 jobs:
+  event_file:
+    # This job uploads an event file so that our test aggregator and recorder can understand this event
+    name: "Event File"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-event-file
+        path: ${{ github.event_path }}
+  
   compute-version:
     name: Compute Version
     runs-on: ubuntu-latest
@@ -59,7 +70,7 @@ jobs:
     #    global-json-file: global.json
 
     - name: Install .NET SDK
-      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
+      uses: nike4613/install-dotnet@b00d6cf9321575a6035df1c53d69455eb6353041
       with:
         global-json: global.json
         
@@ -154,7 +165,7 @@ jobs:
     # Note: All of the SDKs we install have to be for the target architecture. Otherwise, we get issues when the default != the target.
     - name: Install global SDK
       if: ${{ ! matrix.dotnet.needsRestore }}
-      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
+      uses: nike4613/install-dotnet@b00d6cf9321575a6035df1c53d69455eb6353041
       with:
         architecture: ${{ matrix.arch }}
         version: "8.0"
@@ -168,7 +179,7 @@ jobs:
         restore-keys: ${{ runner.os }}-nuget-v1-
     - name: Install restore SDK
       if: ${{ matrix.dotnet.needsRestore }}
-      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
+      uses: nike4613/install-dotnet@b00d6cf9321575a6035df1c53d69455eb6353041
       with:
         architecture: ${{ matrix.arch }}
         global-json: global.json
@@ -184,7 +195,7 @@ jobs:
         
     - name: Install test target runtime
       if: ${{ matrix.dotnet.sdk != '' }}
-      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
+      uses: nike4613/install-dotnet@b00d6cf9321575a6035df1c53d69455eb6353041
       with:
         version: ${{ matrix.dotnet.sdk }}
         architecture: ${{ matrix.arch }}
@@ -214,25 +225,3 @@ jobs:
         name: test-results ${{ matrix.title }}
         retention-days: 1
         path: 'TestResults/*.trx'
-
-  publish-test-results:
-    needs: [build, test]
-    if: ${{ always() && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
-    name: Publish test results
-    permissions:
-      checks: write
-      pull-requests: write
-    steps:
-    - name: Download test results
-      uses: actions/download-artifact@v4
-      with:
-        pattern: test-results *
-        merge-multiple: false
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: '**/*.trx'
-        comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
-        report_individual_runs: true
