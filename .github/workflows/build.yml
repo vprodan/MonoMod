@@ -44,6 +44,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       VersionSuffix: daily.${{needs.compute-version.outputs.ver}}
+      LOG_FILE_NAME: testresults.${{ matrix.os.runner }}.auxtests.trx
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -58,7 +59,7 @@ jobs:
     #    global-json-file: global.json
 
     - name: Install .NET SDK
-      uses: nike4613/install-dotnet@6e785e8b036f6f294c297beab2b875d4cc28a1a0
+      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
       with:
         global-json: global.json
         
@@ -80,6 +81,17 @@ jobs:
 
       # TODO: it might be worth trying to do a "smoketest" test run with the installed tfm to broadly make sure that all builds
       #       work. We may also want to do a hash check on the packages, though I have no idea how reliable that would be.
+      
+    - name: Run auxiliary tests
+      run: dotnet test -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" --no-build -f "FullyQualifiedName!~MonoMod.UnitTest"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: test-results aux ${{ runner.os }}
+        retention-days: 1
+        path: 'TestResults/*.trx'
 
     - name: Upload binlogs
       uses: actions/upload-artifact@v4
@@ -141,7 +153,7 @@ jobs:
     # Note: All of the SDKs we install have to be for the target architecture. Otherwise, we get issues when the default != the target.
     - name: Install global SDK
       if: ${{ ! matrix.dotnet.needsRestore }}
-      uses: nike4613/install-dotnet@6e785e8b036f6f294c297beab2b875d4cc28a1a0
+      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
       with:
         architecture: ${{ matrix.arch }}
         version: "8.0"
@@ -155,7 +167,7 @@ jobs:
         restore-keys: ${{ runner.os }}-nuget-v1-
     - name: Install restore SDK
       if: ${{ matrix.dotnet.needsRestore }}
-      uses: nike4613/install-dotnet@6e785e8b036f6f294c297beab2b875d4cc28a1a0
+      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
       with:
         architecture: ${{ matrix.arch }}
         global-json: global.json
@@ -171,11 +183,14 @@ jobs:
         
     - name: Install test target runtime
       if: ${{ matrix.dotnet.sdk != '' }}
-      uses: nike4613/install-dotnet@6e785e8b036f6f294c297beab2b875d4cc28a1a0
+      uses: nike4613/install-dotnet@b7764872282b45fd575664e90b278d02b1e3305e
       with:
         version: ${{ matrix.dotnet.sdk }}
         architecture: ${{ matrix.arch }}
         runtime: dotnet
+
+    - name: Print SDK info
+      run: dotnet --info
 
     - name: Run tests
       if: ${{ ! matrix.dotnet.isMono && ! matrix.dotnet.pgo }}
