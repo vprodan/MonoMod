@@ -1,0 +1,105 @@
+name: upload-event
+description: ""
+
+inputs:
+  nuget-packages:
+    description: env.NUGET_PACKAGES
+    default: ${{ env.NUGET_PACKAGES }}
+  needsRestore:
+    description: do we need to run a restore
+    default: 'false'
+  arch:
+    description: arch
+  sdk:
+    description: target sdk version
+  pgo:
+    description: is this a pgo run
+    default: 'false'
+  usePgo:
+    description: should this run use pgo
+  tfm:
+    description: the test tfm
+  title:
+    description: the test title
+  log-file-name:
+    description: test log file name
+  
+runs:
+  using: "composite"
+  
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+    if: ${{ inputs.needsRestore }}
+    with:
+      lfs: true
+      submodules: recursive
+      
+  # Note: All of the SDKs we install have to be for the target architecture. Otherwise, we get issues when the default != the target.
+  - name: Install global SDK
+    if: ${{ ! inputs.needsRestore }}
+    uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+    with:
+      architecture: ${{ inputs.arch }}
+      version: "8.0"
+      
+  - name: Cache restored NuGet packages
+    uses: actions/cache@v4
+    if: ${{ inputs.needsRestore }}
+    with:
+      path: ${{ inputs.nuget-packages }}
+      key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+      restore-keys: ${{ runner.os }}-nuget-v1-
+  - name: Install restore SDK
+    if: ${{ inputs.needsRestore }}
+    uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+    with:
+      architecture: ${{ matrix.arch }}
+      global-json: global.json
+
+  - name: Restore packages
+    if: ${{ inputs.needsRestore }}
+    shell: pwsh
+    env:
+      DOTNET_TELEMETRY_OPTOUT: 'true'
+      DOTNET_NOLOGO: 'true'
+      NUGET_PACKAGES: ${{ inputs.nuget-packages }}
+    run: dotnet restore -noAutoRsp
+
+  - name: Download test assets
+    uses: actions/download-artifact@v4
+    with:
+      name: test-assets
+      
+  - name: Install test target runtime
+    if: ${{ inputs.sdk != '' }}
+    uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+    with:
+      version: ${{ inputs.sdk }}
+      architecture: ${{ inputs.arch }}
+      runtime: dotnet
+
+  - name: Print SDK info
+    run: dotnet --info
+
+  - name: Run tests
+    if: ${{ ! inputs.pgo }}
+    run: dotnet test -f ${{ inputs.tfm }} -a ${{ inputs.arch }} -l:"trx;LogFileName=${{ inputs.log-file-name }}" release_${{ inputs.tfm }}/MonoMod.UnitTest.dll
+
+  - name: Run tests (PGO)
+    if: ${{ matrix.dotnet.pgo }}
+    env:
+      DOTNET_ReadyToRun: ${{ matrix.usePgo && 0 || 1 }}
+      DOTNET_TC_QuicJitForLoops: ${{ matrix.usePgo && 1 || 0 }}
+      DOTNET_TieredPGO: ${{ matrix.usePgo && 1 || 0 }}
+    run: dotnet test -f ${{ inputs.tfm }} -a ${{ inputs.arch }} -l:"trx;LogFileName=${{ inputs.log-file-name }}" release_${{ inputs.tfm }}/MonoMod.UnitTest.dll
+
+  # TODO: Mono?
+
+  - name: Upload test results
+    uses: actions/upload-artifact@v4
+    if: ${{ always() }}
+    with:
+      name: test-results ${{ inputs.title }}
+      retention-days: 1
+      path: 'TestResults/*.trx'
