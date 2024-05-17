@@ -6,6 +6,9 @@ on:
       os:
         required: true
         type: string
+      osname:
+        required: true
+        type: string
       version:
         required: true
         type: string
@@ -31,11 +34,11 @@ env:
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    name: 'Build #${{ inputs.version }} (${{ runner.os }})'
+    name: 'Build #${{ inputs.version }} (${{ inputs.osname }})'
     env:
       LOG_FILE_NAME: testresults.${{ inputs.os }}.auxtests.trx
-      VersionSuffix: ${{ !no-suffix && format('daily.{0}', inputs.version) || '' }}
-      DoNotAddSuffix: ${{ no-suffix && '1' || '' }}
+      VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) || '' }}
+      DoNotAddSuffix: ${{ inputs.no-suffix && '1' || '' }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4

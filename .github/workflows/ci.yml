@@ -55,6 +55,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       os: ${{ matrix.os }}
+      osname: ${{ matrix.name }}
       version: ${{ needs.compute-version.outputs.ver }}
       upload-packages: ${{ matrix.upload-packages }}
       upload-tests: ${{ matrix.upload-tests }}
