@@ -21,19 +21,18 @@ jobs:
     - name: Download event file
       uses: actions/download-artifact@v4
       with:
-        run_id: ${{ github.event.workflow_run.id }}
+        run-id: ${{ github.event.workflow_run.id }}
         name: test-event-file
 
     - name: Download test results
       uses: actions/download-artifact@v4
       with:
-        run_id: ${{ github.event.workflow_run.id }}
+        run-id: ${{ github.event.workflow_run.id }}
         pattern: test-results *
         merge-multiple: false
 
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
         event_file: event.json
