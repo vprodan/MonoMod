@@ -28,11 +28,11 @@ $operatingSystems = @(
         hasMono = $true;
     },
     [pscustomobject]@{
-        enable = $false;
+        #enable = $false;
         name = "MacOS 14 (M1)";
         runner = "macos-14";
         ridname = "osx";
-        arch = @("x64", "arm64"); # x64 comes from Rosetta
+        arch = @("x64"<#, "arm64"#>); # x64 comes from Rosetta, and we disable arm64 mode for now because we don't support it yet
         hasMono = $true;
     }
 );
@@ -46,6 +46,8 @@ $dotnetVersions = @(
         isFramework = $true;
     },
     [pscustomobject]@{
+        enable = $false; # TODO: fix CI tests for .NET 2.1. For some reason it can't find the testhost (only on non-Linux)
+        # The application to execute does not exist: 'microsoft.testplatform.testhost/17.2.0\lib/netcoreapp2.1/testhost.dll'
         name = ".NET Core 2.1";
         sdk = "2.1";
         tfm = "netcoreapp2.1";
