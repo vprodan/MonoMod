@@ -80,7 +80,7 @@ jobs:
     - name: Run tests (PGO)
       if: ${{ fromJSON(inputs.matrix).dotnet.pgo }}
       env:
-        DOTNET_ReadyToRun: ${{ fromJSON(inputs.matrix).usePgo && 0 || 1 }}
+        DOTNET_ReadyToRun: ${{ !fromJSON(inputs.matrix).usePgo && 1 || 0 }}
         DOTNET_TC_QuicJitForLoops: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
         DOTNET_TieredPGO: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
       run: dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll

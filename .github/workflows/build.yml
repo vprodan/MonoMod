@@ -37,8 +37,8 @@ jobs:
     name: 'Build #${{ inputs.version }} (${{ inputs.osname }})'
     env:
       LOG_FILE_NAME: testresults.${{ inputs.os }}.auxtests.trx
-      VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) || '' }}
-      DoNotAddSuffix: ${{ inputs.no-suffix && '1' || '' }}
+      VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) }}
+      DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
