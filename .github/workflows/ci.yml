@@ -37,28 +37,36 @@ jobs:
     - id: computever
       run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
   
+  build-testassets:
+    needs: compute-version
+    name: 'Build #${{ needs.compute-version.outputs.ver }} (Linux)'
+    uses: ./.github/workflows/build.yml
+    with:
+      os: ubuntu-latest
+      osname: Linux
+      version: ${{ needs.compute-version.outputs.ver }}
+      upload-packages: true
+      upload-tests: true
+
   build:
     needs: compute-version
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [windows-latest, macos-13]
         include:
-        - os: ubuntu-latest
-          name: Linux
-          upload-packages: true
-          upload-tests: true
         - os: windows-latest
           name: Windows
         - os: macos-13
           name: MacOS
           
+    name: 'Build #${{ needs.compute-version.outputs.ver }} (${{ matrix.name }})'
     uses: ./.github/workflows/build.yml
     with:
       os: ${{ matrix.os }}
       osname: ${{ matrix.name }}
       version: ${{ needs.compute-version.outputs.ver }}
-      upload-packages: ${{ matrix.upload-packages || false }}
-      upload-tests: ${{ matrix.upload-tests || false }}
+      upload-packages: false
+      upload-tests: false
 
   compute-test-matrix:
     name: Compute Test Matrix
@@ -76,10 +84,11 @@ jobs:
       run: ./.github/gen-test-matrix.ps1 -MatrixOutName matrix -GithubOutput $env:GITHUB_OUTPUT
       
   test:
-    needs: [compute-test-matrix, build]
+    needs: [compute-test-matrix, build-testassets]
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.compute-test-matrix.outputs.matrix) }}
     uses: ./.github/workflows/test.yml
+    name: Test ${{ matrix.title }}
     with:
       matrix: ${{ toJSON(matrix) }}
