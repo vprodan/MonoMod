@@ -46,7 +46,7 @@ $dotnetVersions = @(
         isFramework = $true;
     },
     [pscustomobject]@{
-        enable = $false; # TODO: fix CI tests for .NET 2.1. For some reason it can't find the testhost (only on non-Linux)
+        #enable = $false; # TODO: fix CI tests for .NET 2.1. For some reason it can't find the testhost (only on non-Linux)
         # The application to execute does not exist: 'microsoft.testplatform.testhost/17.2.0\lib/netcoreapp2.1/testhost.dll'
         name = ".NET Core 2.1";
         sdk = "2.1";
