@@ -40,6 +40,10 @@ jobs:
       VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) }}
       DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}
     steps:
+    - name: Configure git
+      run: |
+        git config --global core.autocrlf input
+
     - name: Checkout
       uses: actions/checkout@v4
       with:
