@@ -75,7 +75,10 @@ jobs:
 
     - name: Run tests
       if: ${{ ! fromJSON(inputs.matrix).dotnet.isMono && ! fromJSON(inputs.matrix).dotnet.pgo }}
-      run: dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
+      run: |
+        dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} `
+          -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll `
+          -v diag -d diaglog.txt
 
     - name: Run tests (PGO)
       if: ${{ fromJSON(inputs.matrix).dotnet.pgo }}
@@ -83,7 +86,10 @@ jobs:
         DOTNET_ReadyToRun: ${{ !fromJSON(inputs.matrix).usePgo && 1 || 0 }}
         DOTNET_TC_QuicJitForLoops: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
         DOTNET_TieredPGO: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
-      run: dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
+      run: |
+        dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} `
+          -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll `
+          -v diag -d diaglog.txt
 
     # TODO: Mono?
 
@@ -93,4 +99,6 @@ jobs:
       with:
         name: test-results ${{ fromJSON(inputs.matrix).title }}
         retention-days: 1
-        path: 'TestResults/*.trx'
+        path: |
+          TestResults/*.trx
+          diaglog.*
