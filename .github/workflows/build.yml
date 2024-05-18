@@ -98,11 +98,18 @@ jobs:
 
     - name: Archive packages
       uses: actions/upload-artifact@v4
-      #if: ${{ inputs.upload-packages }}
+      if: ${{ inputs.upload-packages }}
       with:
-        name: packages${{ !inputs.upload-packages && format(' {0}', runner.os) }}
+        name: packages
         path: artifacts/package/release/*.nupkg
-        retention-days: ${{ !inputs.upload-packages && 7 }}
+
+    - name: Archive packages
+      uses: actions/upload-artifact@v4
+      if: ${{ !inputs.upload-packages }}
+      with:
+        name: packages ${{ runner.os }}
+        path: artifacts/package/release/*.nupkg
+        retention-days: 7
 
     - name: Upload test assets
       uses: actions/upload-artifact@v4
