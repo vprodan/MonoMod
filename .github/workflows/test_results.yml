@@ -37,25 +37,13 @@ jobs:
         pattern: test-results *
         merge-multiple: false
 
-    #- name: Publish Test Results
-    #  uses: EnricoMi/publish-unit-test-result-action@v2
-    #  with:
-    #    commit: ${{ github.event.workflow_run.head_sha }}
-    #    event_file: event.json
-    #    event_name: ${{ github.event.workflow_run.event }}
-    #
-    #    files: '**/*.trx'
-    #    comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
-    #    report_individual_runs: true
-
-    - name: Test Reporting
-      uses: phoenix-actions/test-reporting@v9
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        name: Test Report
-        path: '**/*.trx'
-        reporter: dotnet-trx
-        list-suites: failed
-        list-tests: failed
-        fail-on-error: false
-        output-to: step-summary
-            
+        commit: ${{ github.event.workflow_run.head_sha }}
+        event_file: event.json
+        event_name: ${{ github.event.workflow_run.event }}
+    
+        files: '**/*.trx'
+        comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
+        report_individual_runs: true
