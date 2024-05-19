@@ -18,10 +18,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <OutputType>Exe</OutputType>
-    <GenerateProgramFile>false</GenerateProgramFile>
-    <TestProject>true</TestProject>
-    <IsTestProject>true</IsTestProject>
+    <OutputType>Library</OutputType>
 
     <XunitVersion Condition="'$(XunitVersion)' == ''">2.4.2</XunitVersion>
     <XunitVsRunnerVersion>$(XunitVersion)</XunitVsRunnerVersion>
