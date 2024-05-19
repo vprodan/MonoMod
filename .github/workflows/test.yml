@@ -18,7 +18,7 @@ env:
 
 jobs:
   test:  
-    name: Test ${{ fromJSON(inputs.matrix).title }}
+    name: Test
     runs-on: ${{ fromJSON(inputs.matrix).os.runner }}
     env:
       LOG_FILE_NAME: testresults.${{ fromJSON(inputs.matrix).os.runner }}.${{ fromJSON(inputs.matrix).dotnet.id != '' && fromJSON(inputs.matrix).dotnet.id || fromJSON(inputs.matrix).dotnet.sdk }}.${{ fromJSON(inputs.matrix).arch }}.trx
@@ -73,6 +73,11 @@ jobs:
 
     - name: Print SDK info
       run: dotnet --info
+      
+    - name: Fix runtimeconfig.json probing paths
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      run: |
+        ConvertTo-Json @{runtimeOptions=@{additionalProbingPaths=@($env:NUGET_PACKAGES)}} > release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.runtimeconfig.dev.json
 
     - name: Run tests
       if: ${{ ! fromJSON(inputs.matrix).dotnet.isMono && ! fromJSON(inputs.matrix).dotnet.pgo }}
