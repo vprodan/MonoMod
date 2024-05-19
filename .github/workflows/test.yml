@@ -22,6 +22,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.matrix).os.runner }}
     env:
       LOG_FILE_NAME: testresults.${{ fromJSON(inputs.matrix).os.runner }}.${{ fromJSON(inputs.matrix).dotnet.id != '' && fromJSON(inputs.matrix).dotnet.id || fromJSON(inputs.matrix).dotnet.sdk }}.${{ fromJSON(inputs.matrix).arch }}.trx
+
     steps:    
     - name: Checkout
       uses: actions/checkout@v4
@@ -77,8 +78,7 @@ jobs:
       if: ${{ ! fromJSON(inputs.matrix).dotnet.isMono && ! fromJSON(inputs.matrix).dotnet.pgo }}
       run: |
         dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} `
-          -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll `
-          -v diag -d diaglog.txt
+          -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
 
     - name: Run tests (PGO)
       if: ${{ fromJSON(inputs.matrix).dotnet.pgo }}
@@ -88,8 +88,7 @@ jobs:
         DOTNET_TieredPGO: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
       run: |
         dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} `
-          -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll `
-          -v diag -d diaglog.txt
+          -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
 
     # TODO: Mono?
 

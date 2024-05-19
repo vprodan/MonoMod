@@ -41,7 +41,7 @@ $dotnetVersions = @(
     [pscustomobject]@{
         name = ".NET Framework 4.x";
         id = 'fx';
-        tfm = "net46";
+        tfm = "net462";
         rids = @("win-x86","win-x64","win-arm64");
         isFramework = $true;
     },
