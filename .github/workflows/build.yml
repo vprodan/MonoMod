@@ -34,7 +34,7 @@ env:
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    name: 'Build #${{ inputs.version }} (${{ inputs.osname }})'
+    name: Build
     env:
       LOG_FILE_NAME: testresults.${{ inputs.os }}.auxtests.trx
       VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) }}
@@ -51,11 +51,7 @@ jobs:
         submodules: recursive
 
     # TODO: maybe we can eventually use package locks for package caching?
-    #- name: Install .NET SDK
-    #  uses: actions/setup-dotnet@v4
-    #  with:
-    #    global-json-file: global.json
-
+    
     - name: Install .NET SDK
       uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
       with:
@@ -80,17 +76,18 @@ jobs:
       # TODO: it might be worth trying to do a "smoketest" test run with the installed tfm to broadly make sure that all builds
       #       work. We may also want to do a hash check on the packages, though I have no idea how reliable that would be.
       
-    - name: Run auxiliary tests
-      run: dotnet test --no-build -c Release -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" --filter "FullyQualifiedName!~MonoMod.UnitTest"
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: ${{ always() }}
-      with:
-        name: test-results aux ${{ runner.os }}
-        retention-days: 1
-        path: 'TestResults/*.trx'
-        if-no-files-found: ignore
+    # TODO: If/when we add other test projects aside from MonoMod.UnitTest, we should run tests here
+    #- name: Run auxiliary tests
+    #  run: dotnet test --no-build -c Release -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" --filter "FullyQualifiedName!~MonoMod.UnitTest"
+    #
+    #- name: Upload test results
+    #  uses: actions/upload-artifact@v4
+    #  if: ${{ always() }}
+    #  with:
+    #    name: test-results aux ${{ runner.os }}
+    #    retention-days: 1
+    #    path: 'TestResults/*.trx'
+    #    if-no-files-found: ignore
 
     - name: Upload binlogs
       uses: actions/upload-artifact@v4
