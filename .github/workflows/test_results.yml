@@ -50,7 +50,7 @@ jobs:
     #    compare_to_earlier_commit: false
 
     - name: Publish Test Results
-      uses: nike4613/actions-test-results@c19f2dc1cbe80353424205ecac808c526c8c1ba1
+      uses: nike4613/actions-test-results@1cdf9825abb56cfcd33153b9cc13e95840752f5a
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
         event_file: event.json
