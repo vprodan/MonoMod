@@ -37,13 +37,25 @@ jobs:
         pattern: test-results *
         merge-multiple: false
 
+    #- name: Publish Test Results
+    #  uses: EnricoMi/publish-unit-test-result-action@v2
+    #  with:
+    #    commit: ${{ github.event.workflow_run.head_sha }}
+    #    event_file: event.json
+    #    event_name: ${{ github.event.workflow_run.event }}
+    #
+    #    files: '**/*.trx'
+    #    comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
+    #    report_individual_runs: true
+    #    compare_to_earlier_commit: false
+
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: nike4613/actions-test-results@c19f2dc1cbe80353424205ecac808c526c8c1ba1
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
         event_file: event.json
         event_name: ${{ github.event.workflow_run.event }}
     
         files: '**/*.trx'
-        comment_mode: ${{ (github.event.workflow_run.event == 'pull_request' || github.event_name == 'pull_request') && 'failures' || 'off' }}
-        report_individual_runs: true
+        comment_mode: failures
+        comment_on_commit: true
