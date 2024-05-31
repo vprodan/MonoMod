@@ -186,6 +186,7 @@ foreach ($os in $operatingSystems)
                     os = $outos;
                     dotnet = [pscustomobject]@{
                         name = "Mono";
+                        id = "sysmono";
                         needsRestore = $true; # Monos always need restore
                         isMono = $true;
                         systemMono = $true;
