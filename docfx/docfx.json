@@ -21,6 +21,8 @@
       "dest": "api",
       "disableGitFeatures": false,
       "disableDefaultFilter": false,
+      "outputFormat": "apiPage",
+      "filter": "filterConfig.yml",
       "namespaceLayout": "nested",
       "memberLayout": "separatePages",
       "enumSortOrder": "declaringOrder"
