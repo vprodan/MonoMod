@@ -124,7 +124,7 @@ foreach ($os in $operatingSystems)
     if ($os.enable -eq $false) { continue; }
     $outos = $os | Select-Object -ExcludeProperty arch,ridname,hasFramework,hasMono,monoArch,monoDll,runnerArch
     
-    if ($os.hasMono && $os.runnerArch -lt $os.arch.Length)
+    if ($os.hasMono -and $os.runnerArch -lt $os.arch.Length)
     {
         # this OS has a system mono, emit a job for that
         $jobs += @(
