@@ -50,12 +50,14 @@ jobs:
     #    compare_to_earlier_commit: false
 
     - name: Publish Test Results
-      uses: nike4613/actions-test-results@v1
+      uses: nike4613/actions-test-results/master@master
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
         event_file: event.json
         event_name: ${{ github.event.workflow_run.event }}
     
-        files: '**/*.trx'
+        files: |
+          **/*.trx
+          **/*.xml
         comment_mode: failures
         comment_on_commit: true
