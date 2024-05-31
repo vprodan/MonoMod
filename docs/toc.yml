@@ -1,0 +1,28 @@
+# This is an automatically generated file
+items:
+- name: Docs
+  href: index.md
+- name: Core
+  href: Core
+- name: Debugging With MonoMod
+  href: Debugging.md
+- name: MonoMod.Backports
+  href: README.Backports.md
+- name: MonoMod.ILHelpers
+  href: README.ILHelpers.md
+- name: MonoMod.RuntimeDetour
+  href: README.RuntimeDetour.md
+- name: MonoMod.Utils
+  href: README.Utils.md
+- name: README.Core
+  href: README.Core.md
+- name: RuntimeDetour
+  href: RuntimeDetour
+- name: RuntimeDetour.HookGen
+  href: RuntimeDetour.HookGen
+- name: Switches
+  href: Switches.md
+- name: Using MonoMod.Patcher
+  href: README.Patcher.md
+- name: Utils
+  href: Utils

@@ -1,0 +1,6 @@
+# This is an automatically generated file
+items:
+- name: RuntimeDetour.HookGen
+  href: index.md
+- name: Using HookGen
+  href: Usage.md

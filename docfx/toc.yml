@@ -1,0 +1,8 @@
+- name: API
+  href: api/
+  homepage: api/index.md
+- name: "|"
+- name: GitHub
+  href: https://github.com/MonoMod
+- name: Discord
+  href: https://discord.gg/jm7GCZB
