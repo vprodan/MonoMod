@@ -1,5 +1,6 @@
 {
   "_appTitle": "MonoMod",
+  "_appName": "MonoMod",
   "_appFooter": "Yet another C# modding swiss army knife.",
   "_description": "A C# modding swiss army knife, powered by cecil.",
   "author": "0x0ade and contributors",

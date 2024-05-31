@@ -1,12 +1,9 @@
 - name: Home
   href: /
-  homepage: index.md
 - name: API
   href: api/
-  homepage: api/index.md
 - name: DevDocs
   href: docs/
-- name: "|"
 - name: GitHub
   href: https://github.com/MonoMod
 - name: Discord
