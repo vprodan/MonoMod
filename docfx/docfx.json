@@ -5,16 +5,17 @@
         {
           "src": "..",
           "files": [
-            "artifacts/bin/*/release_*/MonoMod*.dll"
+            "src/**/MonoMod*.csproj"
           ],
           "exclude": [
-            "**/MonoMod.FrameworkTests.dll",
-            "**/MonoMod.SourceGen.*.dll",
-            "**/MonoMod.UnitTest.dll",
-            "**/MonoMod.Backports.Tasks.dll",
-            "**/MonoMod.ILHelpers.Patcher.dll",
-            "**/MonoMod.DebugIL.dll",
-            "**/MonoMod.RuntimeDetour.HookGen.dll"
+            "**/MonoMod.FrameworkTests.*",
+            "**/MonoMod.SourceGen.*.*",
+            "**/MonoMod.UnitTest.*",
+            "**/MonoMod.Backports.Tasks.*",
+            "**/MonoMod.Patcher.*",
+            "**/MonoMod.ILHelpers.Patcher.*",
+            "**/MonoMod.DebugIL.*",
+            "**/MonoMod.RuntimeDetour.HookGen.*"
           ]
         }
       ],
@@ -23,7 +24,8 @@
       "disableDefaultFilter": false,
       "outputFormat": "apiPage",
       "filter": "filterConfig.yml",
-      "namespaceLayout": "nested",
+      "categoryLayout": "nested",
+      "namespaceLayout": "flattened",
       "memberLayout": "separatePages",
       "enumSortOrder": "declaringOrder"
     }
