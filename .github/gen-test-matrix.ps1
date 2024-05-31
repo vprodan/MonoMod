@@ -182,7 +182,7 @@ foreach ($os in $operatingSystems)
             # this OS has a system mono, emit a job for that
             $jobs += @(
                 [pscustomobject]@{
-                    title = "System Mono";
+                    title = "System Mono on $($os.name)";
                     os = $outos;
                     dotnet = [pscustomobject]@{
                         name = "Mono";
