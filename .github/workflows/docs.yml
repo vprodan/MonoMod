@@ -1,3 +1,4 @@
+name: Build and push docs
 on:
   push:
     branches:
