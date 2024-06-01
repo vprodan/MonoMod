@@ -64,6 +64,7 @@ jobs:
         path: ${{ env.NUGET_PACKAGES }}
         key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
         restore-keys: ${{ runner.os }}-nuget-v1-
+
     - name: Restore
       run: dotnet restore -bl:restore.binlog -noAutoRsp
 
