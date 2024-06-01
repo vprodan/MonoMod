@@ -61,6 +61,9 @@ jobs:
     - name: Restore .NET tools
       run: dotnet tool restore
 
+    - name: Build Source Generator projects
+      run: dotnet build src/MonoMod.SourceGen.Internal/MonoMod.SourceGen.Internal.csproj -c Release -noAutoRsp
+
     - name: Build DocFX project
       run: dotnet docfx docfx/docfx.json
 
