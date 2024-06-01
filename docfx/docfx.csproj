@@ -3,8 +3,10 @@
 
   <ItemGroup>
     <None Remove="_site/**/*" />
-    <None Remove="api/.manifest" />
-    <None Remove="api/*.yml" />
+    <None Remove="api/**/*" />
+    
+    <None Include="api/.gitignore" />
+    <None Include="api/index.md" />
   </ItemGroup>
   
 </Project>
