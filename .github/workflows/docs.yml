@@ -61,17 +61,26 @@ jobs:
     - name: Restore .NET tools
       run: dotnet tool restore
 
-    - name: Build Source Generator projects
-      run: dotnet build src/MonoMod.SourceGen.Internal/MonoMod.SourceGen.Internal.csproj -c Release -noAutoRsp
+    - name: Build all projects
+      run: dotnet build -c Release -noAutoRsp -bl:build.binlog -p:RunAnalyzers=false # don't run any analyzers to speed up this build
 
     - name: Build DocFX project
       run: dotnet docfx docfx/docfx.json
 
+    - name: Upload binlogs
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: binlogs
+        path: '*.binlog'
+        retention-days: 7
+        
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         # Upload entire repository
         path: 'docfx/_site'
+    
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
