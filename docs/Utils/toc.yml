@@ -1,6 +1,4 @@
-# This is an automatically generated file
+href: index.md
 items:
-- name: Utils
-  href: index.md
 - name: Using ModInterop
   href: ModInterop.md

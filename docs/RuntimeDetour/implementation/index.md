@@ -1,3 +1,3 @@
 # Implementation
 
-* [ChainHotPatching](./ChainHotPatching.md)
+* [ChainHotPatching](ChainHotPatching.md)

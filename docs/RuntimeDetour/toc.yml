@@ -1,8 +1,7 @@
 # This is an automatically generated file
+href: index.md
 items:
-- name: RuntimeDetour
-  href: index.md
 - name: Implementation
-  href: implementation
+  href: implementation/toc.yml
 - name: Using RuntimeDetour
   href: Usage.md

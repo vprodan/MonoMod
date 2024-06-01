@@ -1,3 +1,3 @@
-# Utils
+# MonoMod.Utils
 
-* [Using ModInterop](./ModInterop.md)
+* [Using ModInterop](ModInterop.md)

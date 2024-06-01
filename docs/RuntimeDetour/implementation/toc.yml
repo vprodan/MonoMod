@@ -1,6 +1,4 @@
-# This is an automatically generated file
+href: index.md
 items:
-- name: Implementation
-  href: index.md
 - name: ChainHotPatching
   href: ChainHotPatching.md

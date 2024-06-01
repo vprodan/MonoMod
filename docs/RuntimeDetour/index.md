@@ -1,4 +1,4 @@
-# RuntimeDetour
+# MonoMod.RuntimeDetour
 
-* [Implementation](./implementation)
-* [Using RuntimeDetour](./Usage.md)
+- [Implementation](implementation/index.md)
+- [Using RuntimeDetour](Usage.md)

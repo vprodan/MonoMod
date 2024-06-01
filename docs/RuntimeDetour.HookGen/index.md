@@ -1,3 +1,3 @@
-# RuntimeDetour.HookGen
+# MonoMod.RuntimeDetour.HookGen
 
-* [Using HookGen](./Usage.md)
+* [Using HookGen](Usage.md)

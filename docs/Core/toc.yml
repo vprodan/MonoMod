@@ -1,7 +1,5 @@
-# This is an automatically generated file
+href: index.md
 items:
-- name: Core
-  href: index.md
 - name: Discussion about the CoreCLR JIT hook design
   href: CoreCLRJitHooks.md
 - name: INativeExceptionHelper
