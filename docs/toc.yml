@@ -30,3 +30,4 @@ items:
     href: README.RuntimeDetour.md
   - name: MonoMod.Utils
     href: README.Utils.md
+- href: RuntimeIssueNotes.md
