@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace MonoMod.SourceGen.Internal.Analyzers
 {
