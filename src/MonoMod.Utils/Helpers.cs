@@ -157,22 +157,48 @@ namespace MonoMod.Utils
         }
 
         #region GetOrInit*
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public unsafe static T GetOrInit<T>(ref T? location, Func<T> init) where T : class
+        private static class FuncInvokeHolder<T>
         {
-            if (location is not null)
-                return location;
-            return InitializeValue(ref location, &ILHelpers.TailCallFunc<T>, init);
+            public static readonly Func<Func<T>, T> InvokeFunc = static f => f();
         }
 
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public unsafe static T GetOrInitWithLock<T>(ref T? location, object @lock, Func<T> init) where T : class
+        public static T GetOrInit<T>(ref T? location, Func<T> init) where T : class
         {
             if (location is not null)
                 return location;
-            return InitializeValueWithLock(ref location, @lock, &ILHelpers.TailCallFunc<T>, init);
+            return InitializeValue(ref location, FuncInvokeHolder<T>.InvokeFunc, init);
         }
 
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+        public static T GetOrInitWithLock<T>(ref T? location, object @lock, Func<T> init) where T : class
+        {
+            if (location is not null)
+                return location;
+            return InitializeValueWithLock(ref location, @lock, FuncInvokeHolder<T>.InvokeFunc, init);
+        }
+
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+        public static T GetOrInit<TParam, T>(ref T? location, Func<TParam, T> init, TParam param) where T : class
+        {
+            ThrowIfArgumentNull(init);
+            if (location is not null)
+                return location;
+            return InitializeValue(ref location, init, param);
+        }
+
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+        public static T GetOrInitWithLock<TParam, T>(ref T? location, object @lock, Func<TParam, T> init, TParam param) where T : class
+        {
+            ThrowIfArgumentNull(init);
+            if (location is not null)
+                return location;
+            return InitializeValueWithLock(ref location, @lock, init, param);
+        }
+
+        /// <remarks>
+        /// This overload may not work on some older Mono implementations, which do not have good function pointer support.
+        /// </remarks>
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public unsafe static T GetOrInit<T>(ref T? location, delegate*<T> init) where T : class
         {
@@ -181,6 +207,10 @@ namespace MonoMod.Utils
             return InitializeValue(ref location, &ILHelpers.TailCallDelegatePtr<T>, (IntPtr)init);
         }
 
+
+        /// <remarks>
+        /// This overload may not work on some older Mono implementations, which do not have good function pointer support.
+        /// </remarks>
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public unsafe static T GetOrInitWithLock<T>(ref T? location, object @lock, delegate*<T> init) where T : class
         {
@@ -189,6 +219,9 @@ namespace MonoMod.Utils
             return InitializeValueWithLock(ref location, @lock, &ILHelpers.TailCallDelegatePtr<T>, (IntPtr)init);
         }
 
+        /// <remarks>
+        /// This overload may not work on some older Mono implementations, which do not have good function pointer support.
+        /// </remarks>
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public unsafe static T GetOrInit<T, TParam>(ref T? location, delegate*<TParam, T> init, TParam obj) where T : class
         {
@@ -197,6 +230,9 @@ namespace MonoMod.Utils
             return InitializeValue(ref location, init, obj);
         }
 
+        /// <remarks>
+        /// This overload may not work on some older Mono implementations, which do not have good function pointer support.
+        /// </remarks>
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public unsafe static T GetOrInitWithLock<T, TParam>(ref T? location, object @lock, delegate*<TParam, T> init, TParam obj) where T : class
         {
@@ -213,7 +249,25 @@ namespace MonoMod.Utils
         }
 
         [MethodImpl(MethodImplOptionsEx.NoInlining)]
+        private unsafe static T InitializeValue<T, TParam>(ref T? location, Func<TParam, T> init, TParam obj) where T : class
+        {
+            _ = Interlocked.CompareExchange(ref location, init(obj), null);
+            return location!;
+        }
+
+        [MethodImpl(MethodImplOptionsEx.NoInlining)]
         private unsafe static T InitializeValueWithLock<T, TParam>(ref T? location, object @lock, delegate*<TParam, T> init, TParam obj) where T : class
+        {
+            lock (@lock)
+            {
+                if (location is not null)
+                    return location;
+                return location = init(obj);
+            }
+        }
+
+        [MethodImpl(MethodImplOptionsEx.NoInlining)]
+        private unsafe static T InitializeValueWithLock<T, TParam>(ref T? location, object @lock, Func<TParam, T> init, TParam obj) where T : class
         {
             lock (@lock)
             {
