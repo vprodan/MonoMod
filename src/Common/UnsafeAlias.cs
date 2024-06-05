@@ -4,7 +4,7 @@
 
 global using ilhelpers::MonoMod;
 
-#if !NET6_0_OR_GREATER && (NET40_OR_GREATER || NETSTANDARD1_0_OR_GREATER || NETCOREAPP || NET)
+#if !NET6_0_OR_GREATER && (NETSTANDARD2_1_OR_GREATER || NETCOREAPP || NET)
 // Any time we want to use Unsafe, we want ours, not the BCL's. Note that we need these funky defs because the location of Unsafe moves between versions.
 // I would actually rather move the BCL assembly defining it into an alias, but that doesn't seem to be particularly viable
 global using Unsafe = ilhelpers::System.Runtime.CompilerServices.Unsafe;

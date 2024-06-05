@@ -24,22 +24,22 @@ namespace MonoMod.Utils
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public static unsafe bool Has<T>(this T value, T flag) where T : struct, Enum
         {
-            if (sizeof(T) == sizeof(long))
+            if (Unsafe.SizeOf<T>() == sizeof(long))
             {
                 var flagVal = Unsafe.As<T, long>(ref flag);
                 return (Unsafe.As<T, long>(ref value) & flagVal) == flagVal;
             }
-            else if (sizeof(T) == sizeof(int))
+            else if (Unsafe.SizeOf<T>() == sizeof(int))
             {
                 var flagVal = Unsafe.As<T, int>(ref flag);
                 return (Unsafe.As<T, int>(ref value) & flagVal) == flagVal;
             }
-            else if (sizeof(T) == sizeof(short))
+            else if (Unsafe.SizeOf<T>() == sizeof(short))
             {
                 var flagVal = Unsafe.As<T, short>(ref flag);
                 return (Unsafe.As<T, short>(ref value) & flagVal) == flagVal;
             }
-            else if (sizeof(T) == sizeof(byte))
+            else if (Unsafe.SizeOf<T>() == sizeof(byte))
             {
                 var flagVal = Unsafe.As<T, byte>(ref flag);
                 return (Unsafe.As<T, byte>(ref value) & flagVal) == flagVal;
