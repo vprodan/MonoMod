@@ -12,11 +12,6 @@ env:
   DOTNET_NOLOGO: true
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
   
-# If new commits are pushed, don't bother finishing the current run.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
-
 # We'll have a job for building (that runs on x64 machines only, one for each OS to make sure it actually builds)
 # Then, we'll take the result from one of those (probaly Linux) and distribute build artifacts to testers to run
 # a load of tests. This will (eventually) include ARM runners, where possible.
