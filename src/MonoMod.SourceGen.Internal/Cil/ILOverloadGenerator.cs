@@ -429,7 +429,7 @@ namespace MonoMod.SourceGen.Internal.Cil
                     static void EmitMethodWithArg(CodeBuilder builder, string selfFqName, OpcodeDef op, string doc, string argType, string targetType, string argExpr)
                     {
                         _ = builder
-                            .WriteLine($"/// <summary>Emits a {doc} opcode with a <see cref=\"{argType}\"/> operand to the current cursor position.</summary>")
+                            .WriteLine($"/// <summary>Emits a {doc} opcode with a <see cref=\"{argType.Trim(['[', ']'])}\"/> operand to the current cursor position.</summary>")
                             .Write("""/// <param name="operand">The emitted instruction's operand.""");
                         if (argType != targetType)
                         {
