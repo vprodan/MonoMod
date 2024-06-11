@@ -135,9 +135,9 @@ namespace MonoMod.Cil
         public static bool Match<T>(this Instruction instr, OpCode opcode, [MaybeNullWhen(false)] out T value)
         {
             Helpers.ThrowIfArgumentNull(instr);
-            if (instr.OpCode == opcode)
+            if (instr.OpCode == opcode && instr.Operand is T operand)
             {
-                value = (T)instr.Operand;
+                value = operand;
                 return true;
             }
             else
@@ -458,9 +458,9 @@ namespace MonoMod.Cil
         public static bool MatchCallOrCallvirt(this Instruction instr, [MaybeNullWhen(false)] out MethodReference value)
         {
             Helpers.ThrowIfArgumentNull(instr);
-            if (instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt)
+            if ((instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt) && instr.Operand is MethodReference mr)
             {
-                value = (MethodReference)instr.Operand;
+                value = mr;
                 return true;
             }
             else
