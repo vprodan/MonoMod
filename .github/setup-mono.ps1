@@ -16,9 +16,10 @@ if (-not $jobInfo.dotnet.isMono)
 
 if ($jobInfo.dotnet.systemMono)
 {
-    $mono = Get-Command mono;
-    echo "use_mdh=false" >> $GithubOutput;
-    echo "mono_dll=$mono" >> $GithubOutput;
+    $mono = (Get-Command mono).Source;
+    Write-Host "Job is for system mono; using mono=$mono";
+    echo "use_mdh=false" | Out-File $GithubOutput -Append;
+    echo "mono_dll=$mono" | Out-File $GithubOutput -Append;
     return 0;
 }
 
@@ -106,19 +107,24 @@ try {
 "@;
 
     # Now do a restore from there
-    pushd $monoDir
+    pushd $monoDir;
     dotnet restore $dummyProjPath --packages $pkgsPath -tl:off -bl:(Join-Path $monoDir "msbuild.binlog");
-    popd
+    popd;
 
     # Now that we've done the restore, we can export the relevant information
     $pkgBasePath = Join-Path $pkgsPath $pkgName $pkgVer | Resolve-Path;
     $fullLibPath = Join-Path $pkgBasePath $libPath | Resolve-Path;
     $fullDllPath = Join-Path $pkgBasePath $dllPath | Resolve-Path;
 
-    echo "use_mdh=true" >> $GithubOutput;
-    echo "mdh=$mdh" >> $GithubOutput;
-    echo "mono_dll=$fullDllPath" >> $GithubOutput;
-    echo "MONO_PATH=$fullLibPath" >> $GithubEnv;
+    Write-Host "Job is for .NET Mono";
+    Write-Host "mdh=$mdh";
+    Write-Host "mono_dll=$fullDllPath";
+    Write-Host "MONO_PATH=$fullLibPath";
+
+    echo "use_mdh=true" | Out-File $GithubOutput -Append;
+    echo "mdh=$mdh" | Out-File $GithubOutput -Append;
+    echo "mono_dll=$fullDllPath" | Out-File $GithubOutput -Append;
+    echo "MONO_PATH=$fullLibPath" | Out-File $GithubEnv -Append;
 }
 finally
 {

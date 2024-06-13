@@ -193,7 +193,7 @@ foreach ($os in $operatingSystems)
                 continue;
             }
             
-            $outdotnet = $dotnet | Select-Object -Property name,sdk,tfm,pgo,netMonoPkgVer,netMonoNugetSrc
+            $outdotnet = $dotnet | Select-Object -Property name,sdk,tfm,pgo,needsRestore,netMonoPkgVer,netMonoNugetSrc
             
             $title = "$($dotnet.name) $arch on $($os.name)"
             if ($dotnet.pgo)
