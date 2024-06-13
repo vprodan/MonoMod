@@ -66,6 +66,11 @@ if (Test-Path -Type Leaf "$mdh.exe")
     $mdh = "$mdh.exe";
 }
 
+if (-not $IsWindows)
+{
+    chmod ugoa+x $mdh;
+}
+
 # Need to customize NUGET_PACKAGES because we need to do a restore to pull the Mono package
 $oldNUGET_PACKAGES = $env:NUGET_PACKAGES;
 try {
