@@ -78,7 +78,7 @@ jobs:
       env:
         INPUT_JOB: ${{ inputs.matrix }}
       run: |
-        ./.github/setup-mono.ps1 $env:INPUT_JOB $env:GITHUB_ENV $env:GITHUB_OUTPUT
+        ./.github/setup-mono.ps1 $env:INPUT_JOB $env:GITHUB_OUTPUT $env:GITHUB_ENV
 
     - name: Print SDK info
       run: dotnet --info
