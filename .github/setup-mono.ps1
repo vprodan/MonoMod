@@ -14,6 +14,14 @@ if (-not $jobInfo.dotnet.isMono)
     return 0;
 }
 
+if ($jobInfo.dotnet.systemMono)
+{
+    $mono = Get-Command mono;
+    echo "use_mdh=false" >> $GithubOutput;
+    echo "mono_dll=$mono" >> $GithubOutput;
+    return 0;
+}
+
 $pkgSrc = $jobInfo.dotnet.netMonoNugetSrc;
 $pkgName = $jobInfo.dotnet.netMonoPkgName;
 $pkgVer = $jobInfo.dotnet.netMonoPkgVer;
@@ -107,6 +115,7 @@ try {
     $fullLibPath = Join-Path $pkgBasePath $libPath | Resolve-Path;
     $fullDllPath = Join-Path $pkgBasePath $dllPath | Resolve-Path;
 
+    echo "use_mdh=true" >> $GithubOutput;
     echo "mdh=$mdh" >> $GithubOutput;
     echo "mono_dll=$fullDllPath" >> $GithubOutput;
     echo "MONO_PATH=$fullLibPath" >> $GithubEnv;
