@@ -245,7 +245,7 @@ foreach ($os in $operatingSystems)
                 $dllPath = Fill-Template $netMonoDllPath $fill
 
                 # We always need to do a restore on Mono
-                $jobdotnet = $outdotnet | Select-Object -ExcludeProperty sdk -Property *,`
+                $jobdotnet = $outdotnet | Select-Object -ExcludeProperty sdk,pgo -Property *,`
                     @{n='isMono';e={$true}},`
                     @{n='needsRestore';e={$true}},`
                     @{n='netMonoPkgName';e={$pkgName}},`
