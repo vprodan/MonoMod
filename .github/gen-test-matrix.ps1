@@ -147,11 +147,37 @@ $unityMonoVersions = @(
 );
 
 $jobs = @();
+function Remove-NullProperties {
+
+  param(
+    [parameter(Mandatory,ValueFromPipeline)]
+    [psobject] $InputObject
+  )
+
+  process {
+    # Create the initially empty output object
+    $obj = [pscustomobject]::new()
+    # Loop over all input-object properties.
+    foreach($prop in $InputObject.psobject.properties) {
+      # If a property is non-$null, add it to the output object.
+      if ($null -ne $InputObject.$($prop.Name)) {
+        Add-Member -InputObject $obj -NotePropertyName $prop.Name -NotePropertyValue $prop.Value
+      }
+    }
+    # Give the output object a type name that reflects the type of the input
+    # object prefixed with 'NonNull.' - note that this is purely informational, unless
+    # you define a custom output format for this type name.
+    $obj.pstypenames.Insert(0, 'NonNull.' + $InputObject.GetType().FullName)
+    # Output the output object.
+    $obj
+  }
+
+}
 
 foreach ($os in $operatingSystems)
 {
     if ($os.enable -eq $false) { continue; }
-    $outos = $os | Select-Object -Property name,runner
+    $outos = $os | Select-Object -Property name,runner | Remove-NullProperties
     
     if ($os.hasMono -and $os.runnerArch -lt $os.arch.Length)
     {
@@ -203,14 +229,14 @@ foreach ($os in $operatingSystems)
                     [pscustomobject]@{
                         title = $title + " (PGO Off)";
                         os = $outos;
-                        dotnet = $outdotnet;
+                        dotnet = $outdotnet | Remove-NullProperties;
                         arch = $arch;
                         usePgo = $false;
                     },
                     [pscustomobject]@{
                         title = $title + " (PGO On)";
                         os = $outos;
-                        dotnet = $outdotnet;
+                        dotnet = $outdotnet | Remove-NullProperties;
                         arch = $arch;
                         usePgo = $true;
                     }
@@ -223,7 +249,7 @@ foreach ($os in $operatingSystems)
                     [pscustomobject]@{
                         title = $title;
                         os = $outos;
-                        dotnet = $outdotnet;
+                        dotnet = $outdotnet | Remove-NullProperties;
                         arch = $arch;
                     }
                 );
@@ -247,16 +273,16 @@ foreach ($os in $operatingSystems)
                 # We always need to do a restore on Mono
                 $jobdotnet = $outdotnet | Select-Object -ExcludeProperty sdk,pgo -Property *,`
                     @{n='isMono';e={$true}},`
-                    @{n='needsRestore';e={$true}},`
                     @{n='netMonoPkgName';e={$pkgName}},`
                     @{n='monoLibPath';e={$libPath}},`
                     @{n='monoDllPath';e={$dllPath}}
+                $jobdotnet.needsRestore = $true;
 
                 $jobs += @(
                     [pscustomobject]@{
                         title = ".NET Mono $($dotnet.netMonoPkgVer) $arch on $($os.name)";
                         os = $outos;
-                        dotnet = $jobdotnet;
+                        dotnet = $jobdotnet | Remove-NullProperties;
                         arch = $arch;
                     }
                 );
