@@ -55,6 +55,7 @@ $mdhArchName = $jobInfo.arch.ToUpperInvariant();
 $mdhOsName = $jobInfo.os.name;
 if ($mdhOsName -eq "MacOS") { $mdhOsName = "macOS"; } # fixup because Actions gives MDH this out of the gate
 $mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/latest/download/release-$mdhOsName-$mdhArchName.tgz";
+echo $mdhUrl;
 Invoke-WebRequest -Uri $mdhUrl -OutFile $mdhZip;
 
 # extract mdh
