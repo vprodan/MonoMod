@@ -234,3 +234,5 @@ ModelManifest.xml
 .idea/
 *.binlog
 *.dump
+
+.mono/

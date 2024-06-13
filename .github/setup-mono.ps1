@@ -19,6 +19,7 @@ $pkgName = $jobInfo.dotnet.netMonoPkgName;
 $pkgVer = $jobInfo.dotnet.netMonoPkgVer;
 $libPath = $jobInfo.dotnet.monoLibPath;
 $dllPath = $jobInfo.dotnet.monoDllPath;
+$tfm = $jobInfo.dotnet.tfm;
 
 if (-not $pkgSrc -or -not $pkgName -or -not $pkgVer -or -not $libPath -or -not $dllPath)
 {
@@ -30,7 +31,7 @@ if (-not $pkgSrc -or -not $pkgName -or -not $pkgVer -or -not $libPath -or -not $
 $repoRoot = Join-Path $PSScriptRoot ".." | Resolve-Path;
 
 $monoDir = Join-Path $repoRoot ".mono";
-if (-not Test-Path -Type Container $monoDir)
+if (-not (Test-Path -Type Container $monoDir))
 {
     mkdir $monoDir;
 }
@@ -44,11 +45,12 @@ $mdh = Join-Path $mdhPath "mdh";
 $mdhArchName = $jobInfo.arch.ToUpperInvariant();
 $mdhOsName = $jobInfo.os.name;
 if ($mdhOsName -eq "MacOS") { $mdhOsName = "macOS"; } # fixup because Actions gives MDH this out of the gate
-$mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/download/latest/release-$mdhOsName-$mdhArchName.tgz";
-Invoke-WebRequest -Uri $mdhUrl -OutFile $mdhZip
+$mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/latest/download/release-$mdhOsName-$mdhArchName.tgz";
+Invoke-WebRequest -Uri $mdhUrl -OutFile $mdhZip;
 
 # extract mdh
-Expand-Archive -Force -Path $mdhZip $mdhPath
+7z e -y $mdhZip "-o$mdhPath";
+7z e -y (Join-Path $mdhPath "mdh.tar") "-o$mdhPath";
 if (Test-Path -Type Leaf "$mdh.exe")
 {
     $mdh = "$mdh.exe";
@@ -60,40 +62,45 @@ try {
     $env:NUGET_PACKAGES = $pkgsPath;
 
     # Dump the dummy project files
-    $dummyProjPath = Join-Path $monoDir "dummy.proj";
-    Set-Content -Path (Join-Path monoDir "Directory.Build.props") "<Project />";
-    Set-Content -Path (Join-Path monoDir "Directory.Build.targets") "<Project />";
+    $dummyProjPath = Join-Path $monoDir "dummy.csproj";
+    Set-Content -Path (Join-Path $monoDir "Directory.Build.props") "<Project />";
+    Set-Content -Path (Join-Path $monoDir "Directory.Build.targets") "<Project />";
     Set-Content -Path $dummyProjPath @"
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
+    <TargetFramework>$tfm</TargetFramework>
     <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="$pkgName" Version="$pkgVersion" />
+    <PackageDownload Include="$pkgName" Version="[$pkgVer]" />
   </ItemGroup>
 
 </Project>
 "@;
 
     # Generate a NuGet config that assigns the correct package source
-    $nugetConfigFile = Join-Path monoDir "nuget.config";
+    $nugetConfigFile = Join-Path $monoDir "nuget.config";
+    $srcMap = if ($pkgSrc -ne "nuget.org") { "<packageSource key=`"$pkgSrc`"><package pattern=`"$pkgName`" /></packageSource>" } else { "" };
     Set-Content -Path $nugetConfigFile @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
 
   <packageSourceMapping>
-    <packageSource key="$pkgSrc">
-      <package pattern="$pkgName" />
+    <packageSource key="nuget.org">
+      <package pattern="*" />
     </packageSource>
+    $srcMap
   </packageSourceMapping>
   
 </configuration>
 "@;
 
     # Now do a restore from there
-    dotnet restore $dummyProjPath --packages $pkgsPath --configfile $nugetConfigFile
+    pushd $monoDir
+    dotnet restore $dummyProjPath --packages $pkgsPath -tl:off -bl:(Join-Path $monoDir "msbuild.binlog");
+    popd
 
     # Now that we've done the restore, we can export the relevant information
     $pkgBasePath = Join-Path $pkgsPath $pkgName $pkgVer | Resolve-Path;
