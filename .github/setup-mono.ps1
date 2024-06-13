@@ -1,7 +1,8 @@
 param (
     [string] $MatrixJson,
     [string] $GithubOutput,
-    [string] $GithubEnv
+    [string] $GithubEnv,
+    [string] $RunnerOS
 )
 
 $ErrorActionPreference = "Stop";
@@ -52,8 +53,7 @@ $mdh = Join-Path $mdhPath "mdh";
 
 # first, lets grab mdh
 $mdhArchName = $jobInfo.arch.ToUpperInvariant();
-$mdhOsName = $jobInfo.os.name;
-if ($mdhOsName -eq "MacOS") { $mdhOsName = "macOS"; } # fixup because Actions gives MDH this out of the gate
+$mdhOsName = $RunnerOS;
 $mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/latest/download/release-$mdhOsName-$mdhArchName.tgz";
 echo $mdhUrl;
 Invoke-WebRequest -Uri $mdhUrl -OutFile $mdhZip;
