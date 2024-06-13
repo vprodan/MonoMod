@@ -113,7 +113,7 @@ try {
     popd;
 
     # Now that we've done the restore, we can export the relevant information
-    $pkgBasePath = Join-Path $pkgsPath $pkgName $pkgVer | Resolve-Path;
+    $pkgBasePath = Join-Path $pkgsPath $pkgName.ToLowerInvariant() $pkgVer | Resolve-Path;
     $fullLibPath = Join-Path $pkgBasePath $libPath | Resolve-Path;
     $fullDllPath = Join-Path $pkgBasePath $dllPath | Resolve-Path;
 
