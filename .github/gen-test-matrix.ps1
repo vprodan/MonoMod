@@ -5,6 +5,8 @@ param (
 
 $ErrorActionPreference = "Stop";
 
+$nugetOrgPkgSrc = "nuget.org";
+
 $operatingSystems = @(
     [pscustomobject]@{
         name = "Windows";
@@ -13,8 +15,9 @@ $operatingSystems = @(
         arch = @("x86","x64"); # while .NET Framework supports Arm64, GitHub doesn't provide Arm windows runners
         runnerArch = 1;
         hasFramework = $true;
-        monoArch = @("win32", "win64", "win_arm64");
-        monoDll = "mono-2.0-bdwgc.dll";
+        unityMonoArch = @("win32", "win64", "win_arm64");
+        unityMonoDll = "mono-2.0-bdwgc.dll";
+        dllSuffix = ".dll";
     },
     [pscustomobject]@{
         name = "Linux";
@@ -23,8 +26,10 @@ $operatingSystems = @(
         arch = @("x64");
         runnerArch = 0;
         hasMono = $true;
-        monoArch = @("linux64");
-        monoDll = "limonobdwgc-2.0.so"; # TODO
+        unityMonoArch = @("linux64");
+        unityMonoDll = "limonobdwgc-2.0.so"; # TODO
+        dllPrefix = "lib";
+        dllSuffix = ".so";
     },
     [pscustomobject]@{
         name = "MacOS 13";
@@ -33,8 +38,10 @@ $operatingSystems = @(
         arch = @("x64");
         runnerArch = 0;
         hasMono = $true;
-        monoArch = @("macos_x64");
-        monoDll = "limonobdwgc-2.0.dylib";
+        unityMonoArch = @("macos_x64");
+        unityMonoDll = "limonobdwgc-2.0.dylib";
+        dllPrefix = "lib";
+        dllSuffix = ".dylib";
     },
     [pscustomobject]@{
         #enable = $false;
@@ -44,8 +51,10 @@ $operatingSystems = @(
         arch = @("x64"<#, "arm64"#>); # x64 comes from Rosetta, and we disable arm64 mode for now because we don't support it yet
         runnerArch = 1;
         hasMono = $true;
-        monoArch = @("macos_x64", "macos_arm64");
-        monoDll = "limonobdwgc-2.0.dylib";
+        unityMonoArch = @("macos_x64", "macos_arm64");
+        unityMonoDll = "limonobdwgc-2.0.dylib";
+        dllPrefix = "lib";
+        dllSuffix = ".dylib";
     }
 );
 
@@ -88,6 +97,8 @@ $dotnetVersions = @(
         tfm = "net6.0";
         rids = @("win-x86","win-x64","win-arm64","linux-x64","linux-arm","linux-arm64","osx-x64","osx-arm64");
         pgo = $true;
+        netMonoPkgVer = "6.0.31"
+        netMonoNugetSrc = $nugetOrgPkgSrc;
     },
     [pscustomobject]@{
         name = ".NET 7.0";
@@ -95,6 +106,8 @@ $dotnetVersions = @(
         tfm = "net7.0";
         rids = @("win-x86","win-x64","win-arm64","linux-x64","linux-arm","linux-arm64","osx-x64","osx-arm64");
         pgo = $true;
+        netMonoPkgVer = "7.0.20"
+        netMonoNugetSrc = $nugetOrgPkgSrc;
     },
     [pscustomobject]@{
         name = ".NET 8.0";
@@ -102,12 +115,28 @@ $dotnetVersions = @(
         tfm = "net8.0";
         rids = @("win-x86","win-x64","win-arm64","linux-x64","linux-arm","linux-arm64","osx-x64","osx-arm64");
         pgo = $true;
+        netMonoPkgVer = "8.0.6"
+        netMonoNugetSrc = $nugetOrgPkgSrc;
     }
 );
 
+$netMonoPackageName = "Microsoft.NETCore.App.Runtime.Mono.{RID}";
+$netMonoLibPath = "runtimes/{RID}/lib/{TFM}/";
+$netMonoDllPath = "runtimes/{RID}/native/{DllPre}coreclr{DllSuf}";
+
+function Fill-Template($template, $obj)
+{
+    $result = $template;
+    foreach ($kvp in $obj.GetEnumerator())
+    {
+        $result = $result -replace "{$($kvp.Key)}",$kvp.Value;
+    }
+    return $result;
+}
+
 $monoTfm = "net462";
 
-$monoVersions = @(
+$unityMonoVersions = @(
     <#
     [pscustomobject]@{
         name = "Unity Mono 6000.0.2";
@@ -122,7 +151,7 @@ $jobs = @();
 foreach ($os in $operatingSystems)
 {
     if ($os.enable -eq $false) { continue; }
-    $outos = $os | Select-Object -ExcludeProperty arch,ridname,hasFramework,hasMono,monoArch,monoDll,runnerArch
+    $outos = $os | Select-Object -Property name,runner
     
     if ($os.hasMono -and $os.runnerArch -lt $os.arch.Length)
     {
@@ -164,7 +193,7 @@ foreach ($os in $operatingSystems)
                 continue;
             }
             
-            $outdotnet = $dotnet | Select-Object -ExcludeProperty rids
+            $outdotnet = $dotnet | Select-Object -Property name,sdk,tfm,pgo,netMonoPkgVer,netMonoNugetSrc
             
             $title = "$($dotnet.name) $arch on $($os.name)"
             if ($dotnet.pgo)
@@ -195,6 +224,39 @@ foreach ($os in $operatingSystems)
                         title = $title;
                         os = $outos;
                         dotnet = $outdotnet;
+                        arch = $arch;
+                    }
+                );
+            }
+
+            if ($dotnet.netMonoNugetSrc)
+            {
+                # this runtime version has an associated Mono build
+                $fill = @{
+                    RID = $rid;
+                    TFM = $dotnet.tfm;
+                    DllPre = $os.dllPrefix;
+                    DllSuf = $os.dllSuffix;
+                };
+
+                # fill the templates, so that we can add the job
+                $pkgName = Fill-Template $netMonoPackageName $fill
+                $libPath = Fill-Template $netMonoLibPath $fill
+                $dllPath = Fill-Template $netMonoDllPath $fill
+
+                # We always need to do a restore on Mono
+                $jobdotnet = $outdotnet | Select-Object -ExcludeProperty sdk -Property *,`
+                    @{n='isMono';e={$true}},`
+                    @{n='needsRestore';e={$true}},`
+                    @{n='netMonoPkgName';e={$pkgName}},`
+                    @{n='monoLibPath';e={$libPath}},`
+                    @{n='monoDllPath';e={$dllPath}}
+
+                $jobs += @(
+                    [pscustomobject]@{
+                        title = ".NET Mono $($dotnet.netMonoPkgVer) $arch on $($os.name)";
+                        os = $outos;
+                        dotnet = $jobdotnet;
                         arch = $arch;
                     }
                 );
