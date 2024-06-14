@@ -66,7 +66,7 @@ elseif ($mdhArchName -eq "arm64")
 
 if ($mdhOsName -eq "linux")
 {
-    $mdhOsName = "linux-musl";
+    $mdhOsName = "linux-glibc.2.10";
 }
 
 $mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/latest/download/$mdhArchName-$mdhOsName.zip";
