@@ -48,19 +48,33 @@ if (-not (Test-Path -Type Container $monoDir))
 
 $pkgsPath = Join-Path $monoDir "pkg";
 $mdhPath = Join-Path $monoDir "mdh";
-$mdhZip = Join-Path $monoDir "mdh.tgz";
+$mdhZip = Join-Path $monoDir "mdh.zip";
 $mdh = Join-Path $mdhPath "mdh";
 
 # first, lets grab mdh
-$mdhArchName = $jobInfo.arch.ToUpperInvariant();
-$mdhOsName = $RunnerOS;
-$mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/latest/download/release-$mdhOsName-$mdhArchName.tgz";
+$mdhArchName = $jobInfo.arch;
+$mdhOsName = $RunnerOS.ToLowerInvariant();
+
+if ($mdhArchName -eq "x64")
+{
+    $mdhArchName = "x86_64";
+}
+elseif ($mdhArchName -eq "arm64")
+{
+    $mdhArchName = "aarch64";
+}
+
+if ($mdhOsName -eq "linux")
+{
+    $mdhOsName = "linux-musl";
+}
+
+$mdhUrl = "https://github.com/nike4613/mono-dynamic-host/releases/latest/download/$mdhArchName-$mdhOsName.zip";
 echo $mdhUrl;
 Invoke-WebRequest -Uri $mdhUrl -OutFile $mdhZip;
 
 # extract mdh
 7z e -y $mdhZip "-o$mdhPath";
-7z e -y (Join-Path $mdhPath "mdh.tar") "-o$mdhPath";
 if (Test-Path -Type Leaf "$mdh.exe")
 {
     $mdh = "$mdh.exe";
