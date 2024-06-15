@@ -27,7 +27,7 @@ jobs:
     steps:    
     - name: Checkout
       uses: actions/checkout@v4
-      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore || fromJSON(inputs.matrix).dotnet.isMono }}
       with:
         lfs: true
         submodules: recursive
@@ -111,17 +111,7 @@ jobs:
         USE_MDH: ${{ steps.setup_mono.outputs.use_mdh }}
         MDH: ${{ steps.setup_mono.outputs.mdh }}
         MONO_DLL: ${{ steps.setup_mono.outputs.mono_dll }}
-      run: |
-        $useMdh = $env:USE_MDH -eq "true";
-        $exe = if ($useMdh) { $env:MDH } else { $env:MONO_DLL };
-        $exeargs = if ($useMdh) { @($env:MONO_DLL) } else { @() };
-
-        echo $exe;
-        echo $exeargs;
-
-        # TODO: this xUnit TFM is incorrect for some targets. We'd really like to use vstest on .NET Mono, as that will keep things somewhat simpler.
-        &$exe @exeargs "$($env:NUGET_PACKAGES)/xunit.runner.console/$($env:XunitVersion)/tools/$($env:TFM)/xunit.console.exe" `
-          "release_$($env:TFM)/MonoMod.UnitTest.dll" -junit "$($env:LOG_FILE_NAME).xml"
+      run: ./.github/workflows/run-mono-tests.ps1
 
     # TODO: Non-system Mono
 
