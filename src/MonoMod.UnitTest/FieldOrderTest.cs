@@ -16,8 +16,6 @@ namespace MonoMod.UnitTest
         [Fact]
         public void TestFieldOrder()
         {
-            Assert.Fail("test failure");
-
             // We could hardcode the field metadata tokens but ehhh, compilers.
             // DynamicMethodDefinition will call ResolveField *and* FixReflectionCache for us.
             new DynamicMethodDefinition(typeof(FieldOrderTest).GetMethod("DummyMethod", BindingFlags.NonPublic | BindingFlags.Static)).Dispose();
