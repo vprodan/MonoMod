@@ -35,8 +35,6 @@ namespace MonoMod.UnitTest
             WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(0, 0));
             WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(1, 1));
             WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(1, 2));
-
-            Assert.Fail("fail");
         }
 
         private static void WaitForWeakReferenceToDie(WeakReference weakref)
