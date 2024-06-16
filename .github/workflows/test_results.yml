@@ -39,7 +39,7 @@ jobs:
         merge-multiple: false
         
     - name: Publish Test Results
-      uses: nike4613/actions-test-results@master
+      uses: nike4613/actions-test-results/master@master
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
         event_file: event.json
