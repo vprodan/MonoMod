@@ -15,7 +15,6 @@ env:
   DOTNET_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
-  DOTNET_SCRIPT_CACHE_LOCATION: ${{github.workspace}}/artifacts/script-cache
   XunitVersion: "2.4.2"
 
 jobs:
@@ -49,24 +48,12 @@ jobs:
         key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
         restore-keys: ${{ runner.os }}-nuget-v1-
 
-    - name: Cache scripts
-      uses: actions/cache@v4
-      if: ${{ fromJSON(inputs.matrix).dotnet.isMono }}
-      with:
-        path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ runner.os }}-script-v1-${{ hashFiles('**/*.csx') }}
-        restore-keys: ${{ runner.os }}-script-v1-
-
     - name: Install restore SDK
       if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
       uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
       with:
         architecture: ${{ fromJSON(inputs.matrix).arch }}
         global-json: global.json
-
-    - name: Restore tools
-      if: ${{ fromJSON(inputs.matrix).dotnet.isMono }}
-      run: dotnet tool restore
 
     - name: Restore packages
       if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
@@ -91,7 +78,7 @@ jobs:
       env:
         INPUT_JOB: ${{ inputs.matrix }}
       run: |
-        dotnet script ./.github/setup-mono.csx $env:INPUT_JOB $env:GITHUB_OUTPUT $env:GITHUB_ENV ${{ runner.os }}
+        ./.github/setup-mono.ps1 $env:INPUT_JOB $env:GITHUB_OUTPUT $env:GITHUB_ENV ${{ runner.os }}
 
     - name: Print SDK info
       run: dotnet --info
@@ -121,12 +108,13 @@ jobs:
       if: ${{ fromJSON(inputs.matrix).dotnet.isMono }}
       env:
         TFM: ${{ fromJSON(inputs.matrix).dotnet.tfm }}
-        XUNIT_TFM: ${{ steps.setup_mono.outputs.runner_tfm }}
         USE_MDH: ${{ steps.setup_mono.outputs.use_mdh }}
         MDH: ${{ steps.setup_mono.outputs.mdh }}
         MONO_DLL: ${{ steps.setup_mono.outputs.mono_dll }}
       run: ./.github/workflows/run-mono-tests.ps1
-      
+
+    # TODO: Non-system Mono
+
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
