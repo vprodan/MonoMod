@@ -81,7 +81,7 @@ if (jobInfo.dotnet.systemMono)
     }
 
     await StdOut.WriteLineAsync($"Job is for system Mono; using mono={sysMonoPath}");
-    await File.WriteAllLinesAsync(githubOutputFile, [
+    await File.AppendAllLinesAsync(githubOutputFile, [
         "use_mdh=false",
         $"mono_dll={sysMonoPath}",
     ]);
