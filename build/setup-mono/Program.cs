@@ -16,6 +16,9 @@ if (args is not [{ } matrixJson, { } githubOutputFile, { } githubEnvFile, { } ru
     return 1;
 }
 
+githubOutputFile = Path.GetFullPath(githubOutputFile);
+githubEnvFile = Path.GetFullPath(githubEnvFile);
+
 var jobInfo = FromJson(matrixJson, new
 {
     arch = "",
@@ -64,6 +67,7 @@ var resolvedRunnerTfm = NuGetFrameworkUtility.GetNearest([
     "netcoreapp2.0",
 ], ntfm, NuGetFramework.Parse);
 // write out the target framework
+await StdOut.WriteLineAsync($"runner_tfm={resolvedRunnerTfm}");
 await File.AppendAllLinesAsync(githubOutputFile, [
     $"runner_tfm={resolvedRunnerTfm}"
 ]);
