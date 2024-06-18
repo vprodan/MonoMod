@@ -64,6 +64,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "setup-mono", "build\setup-m
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gen-test-matrix", "build\gen-test-matrix\gen-test-matrix.csproj", "{BB04D571-D9DB-4615-8F67-019B651D9551}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -240,6 +242,14 @@ Global
 		{BB04D571-D9DB-4615-8F67-019B651D9551}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BB04D571-D9DB-4615-8F67-019B651D9551}.ReleaseTrace|Any CPU.ActiveCfg = ReleaseTrace|Any CPU
 		{BB04D571-D9DB-4615-8F67-019B651D9551}.ReleaseTrace|Any CPU.Build.0 = ReleaseTrace|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.DebugTrace|Any CPU.ActiveCfg = DebugTrace|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.DebugTrace|Any CPU.Build.0 = DebugTrace|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.ReleaseTrace|Any CPU.ActiveCfg = ReleaseTrace|Any CPU
+		{08D9A4F0-8B01-43A9-8FF0-7479BF365A1C}.ReleaseTrace|Any CPU.Build.0 = ReleaseTrace|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

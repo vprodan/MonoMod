@@ -521,5 +521,27 @@ namespace MonoMod.Core.Interop
             public static kern_return_t Failure = new(5);
             // TODO: more
         }
+        
+        [DllImport(LibSystem, EntryPoint = "mmap")]
+        public static extern IntPtr mmap(IntPtr address, ulong length, map_prot prot, map_flags flags, int fd, long offset);
+        
+        [Flags]
+        public enum map_prot : int
+        {
+            None = 0x00,
+            Read = 0x01,
+            Write = 0x02,
+            Execute = 0x04
+        }
+        
+        [Flags]
+        public enum map_flags : int
+        {
+            Private = 0x0002,
+            Fixed = 0x0010,
+            JIT = 0x0800,
+            Anonymous = 0x1000,
+            Failed
+        }
     }
 }

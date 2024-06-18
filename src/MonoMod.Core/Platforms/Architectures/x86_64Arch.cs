@@ -412,7 +412,7 @@ namespace MonoMod.Core.Platforms.Architectures
             return DetourKindBase.DoRetarget(original, retarget, buffer, out allocationHandle, out needsRepatch, out disposeOldAlloc);
         }
 
-        private const int VtblProxyStubIdxOffs = 0x9;
+        private const int VtblProxyStubIdxOffs = 9;
         private const bool VtblProxyStubIdxPremul = true;
         private static ReadOnlySpan<byte> VtblProxyStubWin => new byte[] {
             0x48, 0x8B, 0x49, 0x08, 0x48, 0x8B, 0x01, 0xFF, 0xA0, 0x55, 0x55, 0x55, 0x55, 0xCC, 0xCC, 0xCC

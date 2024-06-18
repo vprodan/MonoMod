@@ -40,17 +40,24 @@ namespace MonoMod.Core.Platforms.Systems
             PageSize = (nint)Unix.Sysconf(Unix.SysconfName.PageSize);
             allocator = new MmapPagedMemoryAllocator(PageSize);
 
-            if (PlatformDetection.Architecture == ArchitectureKind.x86_64)
+            switch (PlatformDetection.Architecture)
             {
-                defaultAbi = new Abi(
-                    new[] { SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.ThisPointer, SpecialArgumentKind.UserArguments },
-                    SystemVABI.ClassifyAMD64,
-                    true
-                );
-            }
-            else
-            {
-                throw new NotImplementedException();
+                case ArchitectureKind.x86_64:
+                    defaultAbi = new Abi(
+                        new[] { SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.ThisPointer, SpecialArgumentKind.UserArguments },
+                        SystemVABI.ClassifyAMD64,
+                        true
+                    );
+                    break;
+                case ArchitectureKind.Arm64:
+                    defaultAbi = new Abi(
+                        new[] { SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.ThisPointer, SpecialArgumentKind.UserArguments },
+                        SystemVABI.ClassifyAMD64,
+                        true
+                    );
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
         }
 
@@ -371,15 +378,21 @@ namespace MonoMod.Core.Platforms.Systems
 
         private static ReadOnlySpan<byte> NEHTempl => "/tmp/mm-exhelper.so.XXXXXX"u8;
 
-        private unsafe PosixExceptionHelper CreateNativeExceptionHelper()
+        private unsafe PosixExceptionHelper? CreateNativeExceptionHelper()
         {
             Helpers.Assert(arch is not null);
 
             var soname = arch.Target switch
             {
                 ArchitectureKind.x86_64 => "exhelper_linux_x86_64.so",
+                ArchitectureKind.Arm64 => null,
                 _ => throw new NotImplementedException($"No exception helper for current arch")
             };
+
+            if (soname is null)
+            {
+                return null;
+            }
 
             // we want to get a temp file, write our helper to it, and load it
             var templ = ArrayPool<byte>.Shared.Rent(NEHTempl.Length + 1);

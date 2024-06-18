@@ -73,15 +73,24 @@ namespace MonoMod.Core.Platforms.Runtimes
 
         protected FxCoreBaseRuntime()
         {
-            if (PlatformDetection.Architecture == ArchitectureKind.x86)
+            switch (PlatformDetection.Architecture)
             {
-                // On x86/RyuJIT, the runtime uses its own really funky ABI
-                // TODO: is this the ABI used on CLR 2?
-                AbiCore = new Abi(
-                    new[] { SpecialArgumentKind.ThisPointer, SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.UserArguments, SpecialArgumentKind.GenericContext },
-                    ClassifyRyuJitX86,
-                    ReturnsReturnBuffer: true
+                case ArchitectureKind.x86:
+                    // On x86/RyuJIT, the runtime uses its own really funky ABI
+                    // TODO: is this the ABI used on CLR 2?
+                    AbiCore = new Abi(
+                        new[] { SpecialArgumentKind.ThisPointer, SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.UserArguments, SpecialArgumentKind.GenericContext },
+                        ClassifyRyuJitX86,
+                        ReturnsReturnBuffer: true
                     );
+                    break;
+                case ArchitectureKind.Arm64:
+                    AbiCore = new Abi(
+                        new[] { SpecialArgumentKind.ThisPointer, SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.UserArguments, SpecialArgumentKind.GenericContext },
+                        ClassifyRyuJitX86,
+                        ReturnsReturnBuffer: true
+                    );
+                    break;
             }
         }
 
