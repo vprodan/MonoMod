@@ -17,6 +17,8 @@
     <MMSharedSourceFiles>false</MMSharedSourceFiles>
     <MMUseSourceGen>false</MMUseSourceGen>
     <MMBannedApis>false</MMBannedApis>
+
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
