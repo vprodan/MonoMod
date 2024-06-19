@@ -2,7 +2,7 @@
 
 namespace GenTestMatrix.Models;
 
-internal record Dotnet : Enableable
+internal sealed record Dotnet : Enableable
 {
     public required string Name { get; init; }
     public string? Id { get; init; }

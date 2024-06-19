@@ -12,7 +12,7 @@ namespace GenTestMatrix
     [JsonSerializable(typeof(Dotnet))]
     [JsonSerializable(typeof(Job))]
     [JsonSerializable(typeof(MatrixResult))]
-    internal partial class JsonCtx : JsonSerializerContext
+    internal sealed partial class JsonCtx : JsonSerializerContext
     {
     }
 }

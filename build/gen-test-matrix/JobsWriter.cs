@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace GenTestMatrix
 {
-    internal class JobsWriter : IAsyncDisposable
+    internal sealed class JobsWriter : IAsyncDisposable
     {
         private readonly List<Job> jobs = new();
         private readonly FileStream outputStream;

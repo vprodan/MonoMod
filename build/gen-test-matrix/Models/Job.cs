@@ -1,6 +1,6 @@
 ﻿namespace GenTestMatrix.Models;
 
-internal record Job
+internal sealed record Job
 {
     public required string Title { get; init; }
     public required OS OS { get; init; }
