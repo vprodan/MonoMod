@@ -56,14 +56,14 @@ jobs:
     # TODO: maybe we can eventually use package locks for package caching?
     
     - name: Install .NET SDK
-      if: ${{ ! steps.skip_check.outputs.should_skip }}
+      if: steps.skip_check.outputs.should_skip != 'true'
       uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
       with:
         global-json: global.json
         
     # NOTE: manual package caching
     - name: Cache restored NuGet packages
-      if: ${{ ! steps.skip_check.outputs.should_skip }}
+      if: steps.skip_check.outputs.should_skip != 'true'
       uses: actions/cache@v4
       with:
         path: ${{ env.NUGET_PACKAGES }}
@@ -71,7 +71,7 @@ jobs:
         restore-keys: ${{ runner.os }}-nuget-v1-
 
     - name: Compute test matrix
-      if: ${{ ! steps.skip_check.outputs.should_skip }}
+      if: steps.skip_check.outputs.should_skip != 'true'
       id: compute-matrix
       run: dotnet run --project ./build/gen-test-matrix/gen-test-matrix.csproj -- $env:GITHUB_OUTPUT matrix
   
