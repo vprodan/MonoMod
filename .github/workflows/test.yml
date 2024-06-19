@@ -27,7 +27,7 @@ jobs:
     steps:    
     - name: Checkout
       uses: actions/checkout@v4
-      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore || fromJSON(inputs.matrix).dotnet.isMono }}
       with:
         lfs: true
         submodules: recursive
@@ -72,6 +72,15 @@ jobs:
         architecture: ${{ fromJSON(inputs.matrix).arch }}
         runtime: dotnet
 
+    - name: Setup Mono
+      if: ${{ fromJSON(inputs.matrix).dotnet.isMono }}
+      id: setup_mono
+      env:
+        INPUT_JOB: ${{ inputs.matrix }}
+      run: |
+        #./.github/setup-mono.ps1 $env:INPUT_JOB $env:GITHUB_OUTPUT $env:GITHUB_ENV ${{ runner.os }}
+        dotnet run --project ./build/setup-mono/setup-mono.csproj -- $env:INPUT_JOB $env:GITHUB_OUTPUT $env:GITHUB_ENV ${{ runner.os }}
+
     - name: Print SDK info
       run: dotnet --info
       
@@ -97,12 +106,14 @@ jobs:
           -l:"trx;LogFileName=$($env:LOG_FILE_NAME).trx" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
           
     - name: Run tests (Mono)
-      if: ${{ fromJSON(inputs.matrix).dotnet.isMono && fromJSON(inputs.matrix).dotnet.systemMono }}
+      if: ${{ fromJSON(inputs.matrix).dotnet.isMono }}
       env:
         TFM: ${{ fromJSON(inputs.matrix).dotnet.tfm }}
-      run: |
-        mono "$($env:NUGET_PACKAGES)/xunit.runner.console/$($env:XunitVersion)/tools/$($env:TFM)/xunit.console.exe" `
-          "release_$($env:TFM)/MonoMod.UnitTest.dll" -junit "$($env:LOG_FILE_NAME).xml"
+        RUNNER_TFM: ${{ steps.setup_mono.outputs.runner_tfm }}
+        USE_MDH: ${{ steps.setup_mono.outputs.use_mdh }}
+        MDH: ${{ steps.setup_mono.outputs.mdh }}
+        MONO_DLL: ${{ steps.setup_mono.outputs.mono_dll }}
+      run: ./.github/workflows/run-mono-tests.ps1
 
     # TODO: Non-system Mono
 
