@@ -1,4 +1,5 @@
-﻿using GenTestMatrix.Models;
+﻿using GenTestMatrix;
+using GenTestMatrix.Models;
 
 if (args is not [{ } githubOutputFile, ..var matrixOutNames] || matrixOutNames.Length < 1)
 {
