@@ -28,6 +28,8 @@
   <ItemGroup>
     <Using Include="Chell" />
     <Using Include="Chell.Exports" Static="true" />
+
+    <Using Include="System.Collections.Immutable" />
   </ItemGroup>
   
 </Project>
