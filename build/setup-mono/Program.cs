@@ -27,7 +27,7 @@ var jobInfo = FromJson(matrixJson, new
         isMono = false,
         systemMono = false,
         tfm = "",
-        netMonoNugetSrc = (string?)null,
+        netMonoPkgSrc = (string?)null,
         netMonoPkgName = (string?)null,
         netMonoPkgVer = (string?)null,
         monoLibPath = (string?)null,
@@ -88,7 +88,7 @@ if (jobInfo.dotnet.systemMono)
     return 0;
 }
 
-var pkgSrc = jobInfo.dotnet.netMonoNugetSrc;
+var pkgSrc = jobInfo.dotnet.netMonoPkgSrc;
 var pkgName = jobInfo.dotnet.netMonoPkgName;
 var pkgVer = jobInfo.dotnet.netMonoPkgVer;
 var libPath = jobInfo.dotnet.monoLibPath;
