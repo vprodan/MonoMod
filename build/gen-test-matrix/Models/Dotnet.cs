@@ -25,7 +25,7 @@ internal sealed record Dotnet : Enableable
     [JsonPropertyName("netMonoPkgName")]
     public string? MonoPackageName { get; init; }
     public string? MonoLibPath { get; init; }
-    public string? MonoDllpath { get; init; }
+    public string? MonoDllPath { get; init; }
 
     // NOTE: this is semantically required, but cannot be marked so for serialization
     [JsonIgnore]

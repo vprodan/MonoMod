@@ -101,13 +101,13 @@ foreach (var os in OS.OperatingSystems)
                 {
                     Name = $".NET Mono {dotnet.Sdk}",
                     Sdk = null,
-                    Id = $"netmono{dotnet.MonoPackageName}",
+                    Id = $"netmono{dotnet.MonoPackageVersion}",
                     HasPGO = false,
                     IsMono = true,
                     NeedsRestore = true, // Mono always NeedsRestore
                     MonoPackageName = packageName,
                     MonoLibPath = libPath,
-                    MonoDllpath = dllPath,
+                    MonoDllPath = dllPath,
                 };
 
                 await jobs.AddJob(new()
