@@ -52,9 +52,25 @@ jobs:
       with:
         lfs: false
         submodules: false
+        
+    # TODO: maybe we can eventually use package locks for package caching?
+    
+    - name: Install .NET SDK
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        global-json: global.json
+        
+    # NOTE: manual package caching
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
+
     - name: Compute test matrix
       id: compute-matrix
-      run: ./.github/gen-test-matrix.ps1 -MatrixOutName matrix -GithubOutput $env:GITHUB_OUTPUT
+      run: dotnet run --project ./build/gen-test-matrix/gen-test-matrix.csproj -- $env:GITHUB_OUTPUT matrix
   
   build-testassets:
     needs: setup
